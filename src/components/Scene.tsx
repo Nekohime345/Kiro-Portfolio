@@ -1,21 +1,8 @@
 import React, { useRef, useMemo, useState } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, useThree } from "@react-three/fiber"; // REMOVED Object3DNode
+import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, shaderMaterial, Center, useDepthBuffer, useCursor } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
-
-// ------------------------------------------------------------------
-// TYPE DEFINITION FIX (The "Safe" Version)
-// ------------------------------------------------------------------
-// This tells TypeScript: "Trust me, these tags exist. Don't check them."
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      waterShaderMaterial: any;
-      skyShaderMaterial: any;
-    }
-  }
-}
 
 // ------------------------------------------------------------------
 // 1. DEFINE THE VORONOI WATER MATERIAL
@@ -198,6 +185,7 @@ function Sky() {
   return (
     <mesh>
       <sphereGeometry args={[500, 32, 32]} />
+      {/* @ts-ignore */}
       <skyShaderMaterial 
         ref={skyRef} 
         side={THREE.BackSide} 
@@ -211,12 +199,11 @@ function Sky() {
 }
 
 // ------------------------------------------------------------------
-// 2. WATER COMPONENT (UPDATED)
+// 2. WATER COMPONENT
 // ------------------------------------------------------------------
 function Water() {
   const materialRef = useRef<any>(null);
   const { size, camera } = useThree();
-  
   const depthBuffer = useDepthBuffer({ size: 256, frames: Infinity });
 
   useFrame((_, delta) => {
@@ -228,6 +215,7 @@ function Water() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
       <planeGeometry args={[1000, 1000, 1000, 1000]} />
+      {/* @ts-ignore */}
       <waterShaderMaterial 
         ref={materialRef} 
         transparent 
