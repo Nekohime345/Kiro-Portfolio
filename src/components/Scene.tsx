@@ -7,6 +7,38 @@ import { EffectComposer, Outline } from "@react-three/postprocessing";
 // ------------------------------------------------------------------
 // 1. DEFINE THE VORONOI WATER MATERIAL
 // ------------------------------------------------------------------
+
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    waterShaderMaterial: Object3DNode<THREE.ShaderMaterial, typeof THREE.ShaderMaterial> & {
+        uTime?: number;
+        uColorDeep?: string;
+        uColorSurface?: string;
+        uColorFoam?: string;
+        uBigWavesElevation?: number;
+        uBigWavesFrequency?: THREE.Vector2; // Updated to Vector2
+        uBigWavesSpeed?: number;
+        uScale?: number;
+        uDepthMap?: any;
+        uResolution?: [number, number];
+        uCameraNear?: number;
+        uCameraFar?: number;
+        uFoamThreshold?: number;
+        transparent?: boolean;
+        depthWrite?: boolean;
+    };
+    skyShaderMaterial: Object3DNode<THREE.ShaderMaterial, typeof THREE.ShaderMaterial> & {
+        uColorBottom?: string;
+        uColorTop?: string;
+        uCloudColor?: string;
+        uCloudShadow?: string;
+        uTime?: number;
+        uCloudScale?: number;
+        uCloudDensity?: number;
+        side?: any;
+    };
+  }
+}
 const WaterShaderMaterial = shaderMaterial(
   {
     uTime: 0,
