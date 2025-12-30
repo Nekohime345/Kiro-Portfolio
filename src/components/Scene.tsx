@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useState } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, extend, useThree, Object3DNode } from "@react-three/fiber";
 import { OrbitControls, useGLTF, shaderMaterial, Center, useDepthBuffer, useCursor } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 
