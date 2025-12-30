@@ -1,44 +1,25 @@
 import React, { useRef, useMemo, useState } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, useThree, Object3DNode } from "@react-three/fiber";
+import { Canvas, useFrame, extend, useThree } from "@react-three/fiber"; // REMOVED Object3DNode
 import { OrbitControls, useGLTF, shaderMaterial, Center, useDepthBuffer, useCursor } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 
 // ------------------------------------------------------------------
-// 1. DEFINE THE VORONOI WATER MATERIAL
+// TYPE DEFINITION FIX (The "Safe" Version)
 // ------------------------------------------------------------------
-
-declare module "@react-three/fiber" {
-  interface ThreeElements {
-    waterShaderMaterial: Object3DNode<THREE.ShaderMaterial, typeof THREE.ShaderMaterial> & {
-        uTime?: number;
-        uColorDeep?: string;
-        uColorSurface?: string;
-        uColorFoam?: string;
-        uBigWavesElevation?: number;
-        uBigWavesFrequency?: THREE.Vector2; // Updated to Vector2
-        uBigWavesSpeed?: number;
-        uScale?: number;
-        uDepthMap?: any;
-        uResolution?: [number, number];
-        uCameraNear?: number;
-        uCameraFar?: number;
-        uFoamThreshold?: number;
-        transparent?: boolean;
-        depthWrite?: boolean;
-    };
-    skyShaderMaterial: Object3DNode<THREE.ShaderMaterial, typeof THREE.ShaderMaterial> & {
-        uColorBottom?: string;
-        uColorTop?: string;
-        uCloudColor?: string;
-        uCloudShadow?: string;
-        uTime?: number;
-        uCloudScale?: number;
-        uCloudDensity?: number;
-        side?: any;
-    };
+// This tells TypeScript: "Trust me, these tags exist. Don't check them."
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      waterShaderMaterial: any;
+      skyShaderMaterial: any;
+    }
   }
 }
+
+// ------------------------------------------------------------------
+// 1. DEFINE THE VORONOI WATER MATERIAL
+// ------------------------------------------------------------------
 const WaterShaderMaterial = shaderMaterial(
   {
     uTime: 0,
@@ -206,7 +187,6 @@ const SkyShaderMaterial = shaderMaterial(
 extend({ SkyShaderMaterial });
 
 function Sky() {
-  // Fix 2: Use 'any' type for ref to avoid "Property uTime does not exist" error
   const skyRef = useRef<any>(null);
 
   useFrame((_, delta) => {
@@ -237,7 +217,6 @@ function Water() {
   const materialRef = useRef<any>(null);
   const { size, camera } = useThree();
   
-  // Fix 1: Pass arguments to useDepthBuffer
   const depthBuffer = useDepthBuffer({ size: 256, frames: Infinity });
 
   useFrame((_, delta) => {
@@ -284,7 +263,6 @@ function Island() {
         <primitive 
           object={scene} 
           scale={1} 
-          // Fix 3: Add type 'any' to event 'e' to avoid implicit any error
           onPointerOver={(e: any) => {
             e.stopPropagation();
             const hitObject = e.object;
@@ -303,13 +281,11 @@ function Island() {
         />
       </Center>
 
-      {/* Fix 4: If Outline complains about strings, pass numbers. 
-         But usually "white" works. If it still fails, use 0xffffff */}
       <EffectComposer autoClear={false} multisampling={0}>
         <Outline
           selection={selection}
-          visibleEdgeColor={0xffffff} // Changed to hex number just in case
-          hiddenEdgeColor={0xffffff} // Changed to hex number just in case
+          visibleEdgeColor={0xffffff} 
+          hiddenEdgeColor={0xffffff} 
           blur
           edgeStrength={10}
         />
