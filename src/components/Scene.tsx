@@ -214,7 +214,11 @@ function Water() {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[1000, 1000, 1000, 1000]} />
+      {/* 
+         CHANGE: Reduced segments from 1000,1000 to 256,256 
+         This reduces vertices from ~1,000,000 to ~65,000
+      */}
+      <planeGeometry args={[1000, 1000, 256, 256]} /> 
       {/* @ts-ignore */}
       <waterShaderMaterial 
         ref={materialRef} 
@@ -281,10 +285,15 @@ function Island() {
     </>
   );
 }
-
 export default function Scene() {
   return (
-    <Canvas camera={{ position: [0, 3, 6], fov: 60 }}>
+    <Canvas 
+      // ADD: Limit pixel density to save GPU power on mobile/retina screens
+      dpr={[1, 1.5]} 
+      // ADD: Disable native antialiasing (since you use PostProcessing, it's often redundant/heavy)
+      gl={{ antialias: false, powerPreference: "high-performance" }}
+      camera={{ position: [0, 3, 6], fov: 60 }}
+    >
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 5, 5]} intensity={1} />
       
