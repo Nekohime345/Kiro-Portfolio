@@ -22,6 +22,9 @@ export default function About() {
     >
       <div style={{
         maxWidth: '800px',
+        width: '90%', // Added for responsiveness
+        maxHeight: '90vh', // Added for responsiveness
+        overflowY: 'auto', // Added for responsiveness
         background: 'rgba(0, 0, 0, 0.7)',
         backdropFilter: 'blur(15px)',
         padding: '50px',
@@ -35,16 +38,22 @@ export default function About() {
           WHO AM I?
         </h2>
         
+        {/* MERGED BIO: Kept the tone, added the specific details */}
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.1rem', lineHeight: '1.6', color: '#ddd', marginTop: '20px' }}>
-          I'm a BSIT student based in <strong>Cebu, Philippines</strong>, bridging the gap between Full-Stack Development and Game Development. 
+          I'm a <strong>4th-year IT student</strong> at <strong>Cebu Technological University - Argao Campus</strong>, bridging the gap between Full-Stack Development and Game Development.
         </p>
         
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', lineHeight: '1.6', color: '#bbb' }}>
-          Currently exploring the depths of Firebase, React, and C#. When I'm not coding, I'm likely developing games on Roblox or hunting for Valorant skins.
+          My expertise lies in <strong>Javascript, C#, and </strong>, which I've used to build robust solutions like Management Systems. Beyond web apps, I have started to take interest on experiences on <strong>Roblox (Lua)</strong>.
+        </p>
+        
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', lineHeight: '1.6', color: '#bbb' }}>
+          Currently expanding my skills in the Node.js ecosystem (React, Next.js, TypeScript). When I'm not coding, I'm likely debugging game logic or testing out different games.
         </p>
 
         <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
-          {['React', 'Firebase', 'Python', 'Lua', 'Cybersec', 'C#'].map(skill => (
+          {/* UPDATED SKILLS LIST */}
+          {['React / Next.js', 'PHP & MySQL', 'C# / ASP.NET', 'Roblox Lua', 'Firebase', 'Cybersec', 'TypeScript'].map(skill => (
             <span key={skill} style={{
               border: '1px solid #00aaff',
               color: '#00aaff',

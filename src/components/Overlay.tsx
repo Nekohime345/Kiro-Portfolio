@@ -153,7 +153,7 @@ export default function Overlay() {
         <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div style={{ pointerEvents: 'auto', display: 'flex', gap: '20px' }}>
             <button 
-              onClick={() => window.open('https://github.com', '_blank')} 
+              onClick={() => window.open('https://github.com/Nekohime345', '_blank')} 
               style={btnStyle}
             >
               GITHUB
