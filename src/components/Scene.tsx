@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
-
+import Overlay from "./Overlay"; 
 // ------------------------------------------------------------------
 // 1. DEFINE THE VORONOI WATER MATERIAL (NO FOAM)
 // ------------------------------------------------------------------
@@ -260,28 +260,33 @@ function Island() {
     </>
   );
 }
-
 export default function Scene() {
   return (
-    <Canvas 
-      dpr={[1, 1.5]} 
-      gl={{ antialias: false, powerPreference: "high-performance" }}
-      camera={{ position: [0, 3, 6], fov: 60 }}
-    >
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
+    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
       
-      <Water />
-      <Sky />
-      <Island />
+      {/* 2. Add the Overlay here */}
+      <Overlay />
       
-      <OrbitControls 
-        enableDamping 
-        maxPolarAngle={Math.PI / 2 - 0.1}
-        enablePan={false} 
-        minDistance={3}
-        maxDistance={8}
-      />
-    </Canvas>
+      <Canvas 
+        dpr={[1, 1.5]} 
+        gl={{ antialias: false, powerPreference: "high-performance" }}
+        camera={{ position: [0, 3, 6], fov: 60 }}
+      >
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[5, 5, 5]} intensity={1} />
+        
+        <Water />
+        <Sky />
+        <Island />
+        
+        <OrbitControls 
+          enableDamping 
+          maxPolarAngle={Math.PI / 2 - 0.1}
+          enablePan={false} 
+          minDistance={3}
+          maxDistance={8}
+        />
+      </Canvas>
+    </div>
   );
 }
