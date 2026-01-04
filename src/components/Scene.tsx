@@ -1,29 +1,23 @@
 import React, { useRef, useMemo, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, shaderMaterial, Center, useDepthBuffer, useCursor } from "@react-three/drei";
+import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 
 // ------------------------------------------------------------------
-// 1. DEFINE THE VORONOI WATER MATERIAL
+// 1. DEFINE THE VORONOI WATER MATERIAL (NO FOAM)
 // ------------------------------------------------------------------
 const WaterShaderMaterial = shaderMaterial(
   {
     uTime: 0,
     uColorDeep: new THREE.Color("#0088cc"),
     uColorSurface: new THREE.Color("#ffffff"),
-    uColorFoam: new THREE.Color("#ffffff"),
     uBigWavesElevation: 0.1,
     uBigWavesFrequency: new THREE.Vector2(4, 1.5),
     uBigWavesSpeed: 0.75,
     uScale: 12.0, 
-    uDepthMap: null,
-    uResolution: new THREE.Vector2(),
-    uCameraNear: 0.1,
-    uCameraFar: 1000,
-    uFoamThreshold: 1.0,
   },
-  // VERTEX SHADER
+  // VERTEX SHADER (Unchanged)
   `
     uniform float uTime;
     uniform float uBigWavesElevation;
@@ -31,7 +25,7 @@ const WaterShaderMaterial = shaderMaterial(
     uniform float uBigWavesSpeed;
     varying float vElevation;
     varying vec2 vUv;
-    varying vec4 vScreenPosition;
+    
     void main() {
       vUv = uv; 
       vec4 modelPosition = modelMatrix * vec4(position, 1.0);
@@ -43,37 +37,28 @@ const WaterShaderMaterial = shaderMaterial(
       vec4 viewPosition = viewMatrix * modelPosition;
       vec4 projectedPosition = projectionMatrix * viewPosition;
       gl_Position = projectedPosition;
-      vScreenPosition = projectedPosition;
     }
   `,
-  // FRAGMENT SHADER
+  // FRAGMENT SHADER (Foam Logic Removed)
   `
-    #include <packing>
     uniform float uTime;
     uniform vec3 uColorDeep;
     uniform vec3 uColorSurface;
-    uniform vec3 uColorFoam;
     uniform float uScale;
-    uniform sampler2D uDepthMap;
-    uniform vec2 uResolution;
-    uniform float uCameraNear;
-    uniform float uCameraFar;
-    uniform float uFoamThreshold;
     varying vec2 vUv;
     varying float vElevation;
-    varying vec4 vScreenPosition;
-    float getLinearDepth(float fragCoordZ) {
-        float viewZ = perspectiveDepthToViewZ(fragCoordZ, uCameraNear, uCameraFar);
-        return viewZToOrthographicDepth(viewZ, uCameraNear, uCameraFar);
-    }
+
     vec2 random2(vec2 p) {
         return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
     }
+
     void main() {
         vec2 st = vUv * uScale;
         vec2 i_st = floor(st);
         vec2 f_st = fract(st);
         float m_dist = 1.0; 
+        
+        // Voronoi Loop
         for (int y= -1; y <= 1; y++) {
             for (int x= -1; x <= 1; x++) {
                 vec2 neighbor = vec2(float(x),float(y));
@@ -84,16 +69,12 @@ const WaterShaderMaterial = shaderMaterial(
                 m_dist = min(m_dist, dist);
             }
         }
+        
+        // Mix colors based on voronoi pattern
         vec3 waterColor = mix(uColorDeep, uColorSurface, pow(m_dist, 20.0)); 
-        vec2 screenUV = vScreenPosition.xy / vScreenPosition.w * 0.5 + 0.5;
-        float depthSample = texture2D(uDepthMap, screenUV).x;
-        float sceneDepth = getLinearDepth(depthSample);
-        float currentDepth = getLinearDepth(gl_FragCoord.z);
-        float depthDiff = sceneDepth - currentDepth;
-        float foamIntensity = smoothstep(0.01, 0.0, depthDiff);
-        if(depthDiff < 0.0) foamIntensity = 0.0;
-        vec3 finalColor = mix(waterColor, uColorFoam, foamIntensity);
-        gl_FragColor = vec4(finalColor, 0.9);
+        
+        // Output final color (No foam mixing)
+        gl_FragColor = vec4(waterColor, 0.9);
         #include <colorspace_fragment>
     }
   `
@@ -101,7 +82,7 @@ const WaterShaderMaterial = shaderMaterial(
 extend({ WaterShaderMaterial });
 
 // ------------------------------------------------------------------
-// 4. DEFINE THE ANIME/TOON SKY MATERIAL
+// 4. DEFINE THE ANIME/TOON SKY MATERIAL (Unchanged)
 // ------------------------------------------------------------------
 const SkyShaderMaterial = shaderMaterial(
   {
@@ -199,12 +180,13 @@ function Sky() {
 }
 
 // ------------------------------------------------------------------
-// 2. WATER COMPONENT
+// 2. WATER COMPONENT (Optimized)
 // ------------------------------------------------------------------
 function Water() {
   const materialRef = useRef<any>(null);
-  const { size, camera } = useThree();
-  const depthBuffer = useDepthBuffer({ size: 256, frames: Infinity });
+  
+  // REMOVED: useDepthBuffer (Major performance gain!)
+  // const depthBuffer = useDepthBuffer({ size: 256, frames: Infinity });
 
   useFrame((_, delta) => {
     if (materialRef.current) {
@@ -214,10 +196,7 @@ function Water() {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      {/* 
-         CHANGE: Reduced segments from 1000,1000 to 256,256 
-         This reduces vertices from ~1,000,000 to ~65,000
-      */}
+      {/* Reduced Segments */}
       <planeGeometry args={[1000, 1000, 256, 256]} /> 
       {/* @ts-ignore */}
       <waterShaderMaterial 
@@ -227,11 +206,7 @@ function Water() {
         uScale={400.0}
         uColorDeep="#00AAFF" 
         uColorSurface="#00FFff" 
-        uColorFoam="#ffffff"
-        uDepthMap={depthBuffer}
-        uResolution={[size.width, size.height]}
-        uCameraNear={camera.near}
-        uCameraFar={camera.far}
+        // REMOVED: uColorFoam, uDepthMap, uCameraNear, etc.
       />
     </mesh>
   );
@@ -285,12 +260,11 @@ function Island() {
     </>
   );
 }
+
 export default function Scene() {
   return (
     <Canvas 
-      // ADD: Limit pixel density to save GPU power on mobile/retina screens
       dpr={[1, 1.5]} 
-      // ADD: Disable native antialiasing (since you use PostProcessing, it's often redundant/heavy)
       gl={{ antialias: false, powerPreference: "high-performance" }}
       camera={{ position: [0, 3, 6], fov: 60 }}
     >
