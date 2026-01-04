@@ -3,10 +3,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const projects = [
-  { id: 1, title: 'RideRescue', category: 'Web App / QA', desc: 'Emergency roadside assistance platform.' },
-  { id: 2, title: 'E-Commerce Marketplace', category: 'Full Stack', desc: 'A platform for buying and selling digital assets.' },
-  { id: 3, title: 'Roblox Mining Sim', category: 'Game Dev', desc: 'Lua-based mining simulator game.' },
-  { id: 4, title: 'Cybersec Tools', category: 'Python / OSINT', desc: 'Custom scripts for network analysis.' },
+  { id: 1, title: 'Port Congestion Management', category: 'Windows App/ Mobile App', desc: 'port congestion management platform to visualize vessel traffic, port layouts, and congestion levels in a 3D environment..' },
+  { id: 2, title: 'ShareSpace Booking System', category: 'Backend', desc: 'A platform for room reservation platform allowing users to book and manage shared spaces..' },
+  { id: 3, title: 'Campus Quest', category: 'Web App/Game Dev', desc: 'Designed and developed an interactive 3D campus navigation game using Three.js, enabling students to locate and explore campus areas virtually.' },
+  { id: 4, title: 'Student Affair Office (SAO) System', category: 'Python', desc: 'Collaborated on a backend system using Django to streamline student record management and office services for the university.' },
 ];
 
 export default function Works() {

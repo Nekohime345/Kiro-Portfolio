@@ -180,7 +180,8 @@ export default function Overlay() {
                 margin: 0,
                 textShadow: '0 2px 4px rgba(0,0,0,0.5)'
               }}>
-                DRAG TO EXPLORE
+                DRAG TO EXPLORE &
+                SCROLL TO ZOOM
               </p>
             )}
           </div>

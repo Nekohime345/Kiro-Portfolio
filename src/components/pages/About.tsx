@@ -36,15 +36,15 @@ export default function About() {
         </h2>
         
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.1rem', lineHeight: '1.6', color: '#ddd', marginTop: '20px' }}>
-          I'm a BSIT student based in <strong>Cebu, Philippines</strong>, bridging the gap between Full-Stack Development and Cybersecurity. 
+          I'm a BSIT student based in <strong>Cebu, Philippines</strong>, bridging the gap between Full-Stack Development and Game Development. 
         </p>
         
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', lineHeight: '1.6', color: '#bbb' }}>
-          Currently building <em>RideRescue</em> and exploring the depths of Firebase, React, and OSINT tools. When I'm not coding, I'm likely developing games on Roblox or hunting for Valorant skins.
+          Currently exploring the depths of Firebase, React, and C#. When I'm not coding, I'm likely developing games on Roblox or hunting for Valorant skins.
         </p>
 
         <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
-          {['React', 'Firebase', 'Python', 'Lua', 'Cybersec', 'OSINT'].map(skill => (
+          {['React', 'Firebase', 'Python', 'Lua', 'Cybersec', 'C#'].map(skill => (
             <span key={skill} style={{
               border: '1px solid #00aaff',
               color: '#00aaff',
