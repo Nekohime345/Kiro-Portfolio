@@ -1,14 +1,16 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor, Html } from "@react-three/drei"; // Added Html
+import { Canvas, useFrame, extend, ThreeEvent } from "@react-three/fiber"; // Added ThreeEvent
+import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor, Html } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 import Overlay from "./Overlay"; 
 
 // ------------------------------------------------------------------
-// DATA FOR THE PANELS
+// DATA FOR THE PANELS (Typed)
 // ------------------------------------------------------------------
-const objectData = {
+type ObjectDataKey = "House" | "Lighthouse" | "SailorBoat" | "SignalTower" | "Boat" | "Shack" | "Dock";
+
+const objectData: Record<ObjectDataKey, { title: string; desc: string }> = {
   House: { title: "Main Residence", desc: "A cozy retreat overlooking the ocean." },
   Lighthouse: { title: "The Beacon", desc: "Guides sailors safely to the shore at night." },
   SailorBoat: { title: "Fishing Vessel", desc: "Used for daily catches and deep sea travel." },
@@ -84,7 +86,6 @@ const WaterShaderMaterial = shaderMaterial(
         }
         
         vec3 waterColor = mix(uColorDeep, uColorSurface, pow(m_dist, 20.0)); 
-        
         gl_FragColor = vec4(waterColor, 0.9);
         #include <colorspace_fragment>
     }
@@ -166,12 +167,18 @@ const SkyShaderMaterial = shaderMaterial(
 extend({ SkyShaderMaterial });
 
 function Sky() {
-  const skyRef = useRef(null);
+  // Fix: Explicitly type the ref so we can access uTime safely
+  const skyRef = useRef<THREE.ShaderMaterial>(null);
+
   useFrame((_, delta) => {
     if (skyRef.current) {
-      skyRef.current.uTime += delta;
+      // Fix: Access uTime safely by letting TS know it exists on our custom shader
+      (skyRef.current.uniforms.uTime.value as number) += delta;
+      // Alternatively, if you defined uTime as a property on the material instance directly:
+      // (skyRef.current as any).uTime += delta;
     }
   });
+
   return (
     <mesh>
       <sphereGeometry args={[500, 32, 32]} />
@@ -192,12 +199,17 @@ function Sky() {
 // 2. WATER COMPONENT
 // ------------------------------------------------------------------
 function Water() {
-  const materialRef = useRef(null);
+  // Fix: Type ref
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
   useFrame((_, delta) => {
     if (materialRef.current) {
-      materialRef.current.uTime += delta;
+       // Fix: Access uTime safely
+       (materialRef.current.uniforms.uTime.value as number) += delta;
+       // Or: (materialRef.current as any).uTime += delta; 
     }
   });
+
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
       <planeGeometry args={[1000, 1000, 256, 256]} /> 
@@ -218,17 +230,22 @@ function Water() {
 // 3. ISLAND & SCENE
 // ------------------------------------------------------------------
 
-// Helper component for the Info Panel
-function DetailPanel({ target }) {
+// Helper interface for props
+interface DetailPanelProps {
+  target: THREE.Object3D;
+}
+
+function DetailPanel({ target }: DetailPanelProps) {
   const [position, setPosition] = useState(new THREE.Vector3());
-  const data = objectData[target.name] || { title: target.name, desc: "No description available." };
+  
+  // Fix: Safe access to objectData with fallback
+  const name = target.name as ObjectDataKey;
+  const data = objectData[name] || { title: target.name, desc: "No description available." };
 
   useEffect(() => {
     if (target) {
-      // Calculate the center of the bounding box to place the label nicely
       const box = new THREE.Box3().setFromObject(target);
       const center = box.getCenter(new THREE.Vector3());
-      // Add a little offset to Y so it floats above the object
       center.y = box.max.y + 0.5;
       setPosition(center);
     }
@@ -259,7 +276,7 @@ function DetailPanel({ target }) {
 
 function Island() {
   const { scene } = useGLTF("/assets/models/island-model/Portfolio_island_final.glb");
-  const [hovered, setHover] = useState(null);
+  const [hovered, setHover] = useState<THREE.Object3D | null>(null);
   
   const targetNames = ["House", "Lighthouse", "SailorBoat", "SignalTower", "Boat", "Shack", "Dock"];
   useCursor(!!hovered);
@@ -272,10 +289,10 @@ function Island() {
         <primitive 
           object={scene} 
           scale={1} 
-          onPointerOver={(e) => {
+          // Fix: Type the event properly
+          onPointerOver={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
             const hitObject = e.object;
-            // Traverse up to find the named parent if the hit part is unnamed
             if (targetNames.includes(hitObject.name)) {
               setHover(hitObject);
             } else if (hitObject.parent && targetNames.includes(hitObject.parent.name)) {
@@ -284,13 +301,12 @@ function Island() {
               setHover(null);
             }
           }}
-          onPointerOut={(e) => {
+          onPointerOut={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
             setHover(null);
           }}
         />
         
-        {/* Render the Panel when hovered */}
         {hovered && <DetailPanel target={hovered} />}
 
       </Center>
