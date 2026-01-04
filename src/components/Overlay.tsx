@@ -3,70 +3,50 @@ import { motion } from 'framer-motion';
 
 export default function Overlay() {
   return (
-    <div 
-      className="overlay-container"
-      style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
-        pointerEvents: 'none', 
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        zIndex: 10,
-        overflow: 'hidden'
-      }}
-    >
-      {/* 
-         CSS Styles for Responsiveness 
-         (Using standard CSS media queries for layout changes)
-      */}
+    <div style={{ 
+      position: 'absolute', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      height: '100%', 
+      pointerEvents: 'none', 
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      padding: '40px',
+      boxSizing: 'border-box',
+      zIndex: 10,
+      overflow: 'hidden' // Prevents scrollbars during the huge text phase
+    }}>
+      {/* Import Fonts */}
       <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap');
-          
-          /* Default Desktop Padding */
-          .overlay-container { padding: 40px; }
-          .nav-link { font-size: 1.5rem; }
-          .footer-container { flex-direction: row; align-items: flex-end; }
-          .buttons-container { flex-direction: row; }
-
-          /* Mobile Styles (Max Width 768px) */
-          @media (max-width: 768px) {
-            .overlay-container { padding: 20px; }
-            .nav-link { font-size: 1.1rem; }
-            .footer-container { flex-direction: column-reverse; align-items: center; gap: 15px; }
-            .buttons-container { flex-wrap: wrap; justify-content: center; gap: 10px; }
-            .footer-text { text-align: center; width: 100%; margin-bottom: 10px; }
-          }
-        `}
+        {`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap');`}
       </style>
 
       {/* 
          ANIMATED TITLE CONTAINER 
-         Moves from Center -> Top-Left
+         This handles the position shift from CENTER -> TOP-LEFT
       */}
       <motion.div
         initial={{ 
           top: "50%", 
           left: "50%", 
-          transform: "translate(-50%, -50%)", 
+          transform: "translate(-50%, -50%)", // Center initially
+          position: "absolute",
           textAlign: "center"
         }}
         animate={{ 
-          top: "clamp(20px, 5vh, 40px)",    // Responsive margin
-          left: "clamp(20px, 5vw, 40px)",   // Responsive margin
-          transform: "translate(0%, 0%)", 
+          top: "40px", 
+          left: "40px", 
+          transform: "translate(0%, 0%)", // Reset transform for top-left
           textAlign: "left"
         }}
         transition={{ 
           duration: 1.5, 
           ease: "easeInOut", 
-          delay: 3 
+          delay: 3 // Wait 3 seconds before moving to corner
         }}
-        style={{ position: "absolute", zIndex: 20 }}
+        style={{ zIndex: 20 }}
       >
         <motion.h1 
           style={{ 
@@ -75,29 +55,29 @@ export default function Overlay() {
             color: '#ffffff',
             lineHeight: '0.9',
             textShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap' // Keeps text on one line during animation
           }}
-          // RESPONSIVE SCALING: Huge (120vh) -> Normal (Clamp)
-          initial={{ fontSize: "120vh", opacity: 0 }} 
-          animate={{ fontSize: "clamp(3rem, 10vw, 5rem)", opacity: 1 }}
+          // TEXT SCALE ANIMATION: Huge -> Normal
+          initial={{ fontSize: "200rem", opacity: 0 }} 
+          animate={{ fontSize: "4rem", opacity: 1 }}
           transition={{ 
             duration: 2.5, 
-            ease: [0.16, 1, 0.3, 1], 
+            ease: [0.16, 1, 0.3, 1], // Custom "spring-like" ease
           }}
         >
           MY PORTFOLIO
         </motion.h1>
         
-        {/* Subtitle */}
+        {/* SUBTITLE (Fades in after title lands) */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 3.5, duration: 1 }} 
+          transition={{ delay: 3.5, duration: 1 }} // Fade in after move completes
           style={{ 
             fontFamily: "'Inter', sans-serif", 
             margin: '5px 0 0 5px', 
             color: 'rgba(255, 255, 255, 0.8)', 
-            fontSize: 'clamp(0.8rem, 2vw, 1rem)', // Responsive font size
+            fontSize: '0.9rem', 
             letterSpacing: '1px' 
           }}
         >
@@ -107,7 +87,7 @@ export default function Overlay() {
 
       {/* 
          NAVIGATION & FOOTER 
-         Fades in after animation
+         These fade in only AFTER the intro is done (delay: 4s)
       */}
       <motion.div 
         initial={{ opacity: 0 }} 
@@ -115,17 +95,17 @@ export default function Overlay() {
         transition={{ delay: 4, duration: 1 }}
         style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
       >
-        {/* TOP NAV */}
+        {/* TOP NAV (Aligned Right) */}
         <header style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <nav style={{ pointerEvents: 'auto', display: 'flex', gap: 'clamp(15px, 3vw, 30px)' }}>
+          <nav style={{ pointerEvents: 'auto', display: 'flex', gap: '30px' }}>
             {['WORKS', 'ABOUT', 'CONTACT'].map((item) => (
               <a 
                 key={item} 
                 href={`#${item.toLowerCase()}`} 
-                className="nav-link"
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
                   color: 'white',
+                  fontSize: '1.5rem',
                   textDecoration: 'none',
                   cursor: 'pointer',
                   textShadow: '0 2px 4px rgba(0,0,0,0.2)'
@@ -137,21 +117,15 @@ export default function Overlay() {
           </nav>
         </header>
 
-        {/* FOOTER */}
-        <footer className="footer-container" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          
-          {/* Social Buttons */}
-          <div className="buttons-container" style={{ pointerEvents: 'auto', display: 'flex', gap: '20px' }}>
+        {/* BOTTOM FOOTER */}
+        <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div style={{ pointerEvents: 'auto', display: 'flex', gap: '20px' }}>
             <button style={btnStyle}>GITHUB</button>
             <button style={btnStyle}>LINKEDIN</button>
             <button style={btnStyle}>RESUME</button>
           </div>
-
-          {/* Instructions Text */}
-          <div className="footer-text" style={{ textAlign: 'right', color: 'white', opacity: 0.7 }}>
-            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.8rem', margin: 0 }}>
-              DRAG TO EXPLORE
-            </p>
+          <div style={{ textAlign: 'right', color: 'white', opacity: 0.7 }}>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.8rem', margin: 0 }}>DRAG TO EXPLORE</p>
           </div>
         </footer>
       </motion.div>
