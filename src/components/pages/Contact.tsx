@@ -1,8 +1,40 @@
 // components/pages/Contact.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function Contact() {
+  // 1. STATE FOR FEEDBACK (Success/Error)
+  const [status, setStatus] = useState(""); 
+
+  // 2. HANDLE SUBMIT FUNCTION
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    setStatus("sending");
+
+    try {
+      // 3. REPLACE THIS URL WITH YOUR FORMSPREE URL
+      const response = await fetch("https://formspree.io/f/xpqwkzgg", {
+        method: "POST",
+        body: data,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        form.reset(); // Clear the form
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      setStatus("error");
+    }
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.9 }}
@@ -37,24 +69,60 @@ export default function Contact() {
           Got a project or an internship offer?
         </p>
 
-        <form style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <input type="text" placeholder="Name" style={inputStyle} />
-          <input type="email" placeholder="Email" style={inputStyle} />
-          <textarea rows={4} placeholder="Message" style={inputStyle} />
+        {/* 4. ATTACH THE HANDLER */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           
-          <button style={{
-            background: '#00aaff',
-            color: 'white',
-            border: 'none',
-            padding: '12px',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            marginTop: '10px',
-            fontFamily: "'Inter', sans-serif"
-          }}>
-            SEND MESSAGE
+          {/* NAME FIELD */}
+          <input 
+            type="text" 
+            name="name" // "name" attribute is required for Formspree
+            placeholder="Name" 
+            required
+            style={inputStyle} 
+          />
+
+          {/* EMAIL FIELD */}
+          <input 
+            type="email" 
+            name="email" // "name" attribute is required
+            placeholder="Email" 
+            required
+            style={inputStyle} 
+          />
+
+          {/* MESSAGE FIELD */}
+          <textarea 
+            name="message" // "name" attribute is required
+            rows={4} 
+            placeholder="Message" 
+            required
+            style={inputStyle} 
+          />
+          
+          <button 
+            type="submit" 
+            disabled={status === "sending" || status === "success"}
+            style={{
+              background: status === 'success' ? '#4ade80' : '#00aaff', // Green on success
+              color: 'white',
+              border: 'none',
+              padding: '12px',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              cursor: status === 'sending' ? 'wait' : 'pointer',
+              marginTop: '10px',
+              fontFamily: "'Inter', sans-serif",
+              transition: 'background 0.3s'
+            }}
+          >
+            {status === "sending" ? "SENDING..." : status === "success" ? "MESSAGE SENT!" : "SEND MESSAGE"}
           </button>
+
+          {status === "error" && (
+            <p style={{ color: '#ef4444', margin: 0, fontSize: '0.8rem', textAlign: 'center' }}>
+              Oops! Something went wrong. Please try again.
+            </p>
+          )}
         </form>
       </div>
     </motion.section>
@@ -68,5 +136,6 @@ const inputStyle: React.CSSProperties = {
   color: 'white',
   fontFamily: "'Inter', sans-serif",
   fontSize: '0.9rem',
-  outline: 'none'
+  outline: 'none',
+  borderRadius: '4px'
 };
