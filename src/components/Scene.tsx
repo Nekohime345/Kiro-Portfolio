@@ -1,11 +1,25 @@
-import React, { useRef, useMemo, useState } from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor } from "@react-three/drei";
+import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor, Html } from "@react-three/drei"; // Added Html
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 import Overlay from "./Overlay"; 
+
 // ------------------------------------------------------------------
-// 1. DEFINE THE VORONOI WATER MATERIAL (NO FOAM)
+// DATA FOR THE PANELS
+// ------------------------------------------------------------------
+const objectData = {
+  House: { title: "Main Residence", desc: "A cozy retreat overlooking the ocean." },
+  Lighthouse: { title: "The Beacon", desc: "Guides sailors safely to the shore at night." },
+  SailorBoat: { title: "Fishing Vessel", desc: "Used for daily catches and deep sea travel." },
+  SignalTower: { title: "Radio Tower", desc: "Broadcasts signals to the mainland." },
+  Boat: { title: "Small Dinghy", desc: "Perfect for quick trips around the island." },
+  Shack: { title: "Storage Shack", desc: "Holds tools, nets, and supplies." },
+  Dock: { title: "The Pier", desc: "The main entry point for all visitors." }
+};
+
+// ------------------------------------------------------------------
+// 1. DEFINE THE VORONOI WATER MATERIAL
 // ------------------------------------------------------------------
 const WaterShaderMaterial = shaderMaterial(
   {
@@ -17,7 +31,7 @@ const WaterShaderMaterial = shaderMaterial(
     uBigWavesSpeed: 0.75,
     uScale: 12.0, 
   },
-  // VERTEX SHADER (Unchanged)
+  // VERTEX SHADER
   `
     uniform float uTime;
     uniform float uBigWavesElevation;
@@ -39,7 +53,7 @@ const WaterShaderMaterial = shaderMaterial(
       gl_Position = projectedPosition;
     }
   `,
-  // FRAGMENT SHADER (Foam Logic Removed)
+  // FRAGMENT SHADER
   `
     uniform float uTime;
     uniform vec3 uColorDeep;
@@ -58,7 +72,6 @@ const WaterShaderMaterial = shaderMaterial(
         vec2 f_st = fract(st);
         float m_dist = 1.0; 
         
-        // Voronoi Loop
         for (int y= -1; y <= 1; y++) {
             for (int x= -1; x <= 1; x++) {
                 vec2 neighbor = vec2(float(x),float(y));
@@ -70,10 +83,8 @@ const WaterShaderMaterial = shaderMaterial(
             }
         }
         
-        // Mix colors based on voronoi pattern
         vec3 waterColor = mix(uColorDeep, uColorSurface, pow(m_dist, 20.0)); 
         
-        // Output final color (No foam mixing)
         gl_FragColor = vec4(waterColor, 0.9);
         #include <colorspace_fragment>
     }
@@ -82,7 +93,7 @@ const WaterShaderMaterial = shaderMaterial(
 extend({ WaterShaderMaterial });
 
 // ------------------------------------------------------------------
-// 4. DEFINE THE ANIME/TOON SKY MATERIAL (Unchanged)
+// 4. DEFINE THE SKY MATERIAL
 // ------------------------------------------------------------------
 const SkyShaderMaterial = shaderMaterial(
   {
@@ -155,14 +166,12 @@ const SkyShaderMaterial = shaderMaterial(
 extend({ SkyShaderMaterial });
 
 function Sky() {
-  const skyRef = useRef<any>(null);
-
+  const skyRef = useRef(null);
   useFrame((_, delta) => {
     if (skyRef.current) {
       skyRef.current.uTime += delta;
     }
   });
-
   return (
     <mesh>
       <sphereGeometry args={[500, 32, 32]} />
@@ -180,23 +189,17 @@ function Sky() {
 }
 
 // ------------------------------------------------------------------
-// 2. WATER COMPONENT (Optimized)
+// 2. WATER COMPONENT
 // ------------------------------------------------------------------
 function Water() {
-  const materialRef = useRef<any>(null);
-  
-  // REMOVED: useDepthBuffer (Major performance gain!)
-  // const depthBuffer = useDepthBuffer({ size: 256, frames: Infinity });
-
+  const materialRef = useRef(null);
   useFrame((_, delta) => {
     if (materialRef.current) {
       materialRef.current.uTime += delta;
     }
   });
-
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      {/* Reduced Segments */}
       <planeGeometry args={[1000, 1000, 256, 256]} /> 
       {/* @ts-ignore */}
       <waterShaderMaterial 
@@ -206,7 +209,6 @@ function Water() {
         uScale={400.0}
         uColorDeep="#00AAFF" 
         uColorSurface="#00FFff" 
-        // REMOVED: uColorFoam, uDepthMap, uCameraNear, etc.
       />
     </mesh>
   );
@@ -215,9 +217,49 @@ function Water() {
 // ------------------------------------------------------------------
 // 3. ISLAND & SCENE
 // ------------------------------------------------------------------
+
+// Helper component for the Info Panel
+function DetailPanel({ target }) {
+  const [position, setPosition] = useState(new THREE.Vector3());
+  const data = objectData[target.name] || { title: target.name, desc: "No description available." };
+
+  useEffect(() => {
+    if (target) {
+      // Calculate the center of the bounding box to place the label nicely
+      const box = new THREE.Box3().setFromObject(target);
+      const center = box.getCenter(new THREE.Vector3());
+      // Add a little offset to Y so it floats above the object
+      center.y = box.max.y + 0.5;
+      setPosition(center);
+    }
+  }, [target]);
+
+  return (
+    <Html position={position} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+      <div style={{
+        background: "rgba(255, 255, 255, 0.9)",
+        padding: "12px 16px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        border: "1px solid #e5e7eb",
+        minWidth: "200px",
+        fontFamily: "Arial, sans-serif",
+        textAlign: "left"
+      }}>
+        <h3 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "bold", color: "#1f2937" }}>
+          {data.title}
+        </h3>
+        <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
+          {data.desc}
+        </p>
+      </div>
+    </Html>
+  );
+}
+
 function Island() {
   const { scene } = useGLTF("/assets/models/island-model/Portfolio_island_final.glb");
-  const [hovered, setHover] = useState<THREE.Object3D | null>(null);
+  const [hovered, setHover] = useState(null);
   
   const targetNames = ["House", "Lighthouse", "SailorBoat", "SignalTower", "Boat", "Shack", "Dock"];
   useCursor(!!hovered);
@@ -230,9 +272,10 @@ function Island() {
         <primitive 
           object={scene} 
           scale={1} 
-          onPointerOver={(e: any) => {
+          onPointerOver={(e) => {
             e.stopPropagation();
             const hitObject = e.object;
+            // Traverse up to find the named parent if the hit part is unnamed
             if (targetNames.includes(hitObject.name)) {
               setHover(hitObject);
             } else if (hitObject.parent && targetNames.includes(hitObject.parent.name)) {
@@ -241,11 +284,15 @@ function Island() {
               setHover(null);
             }
           }}
-          onPointerOut={(e: any) => {
+          onPointerOut={(e) => {
             e.stopPropagation();
             setHover(null);
           }}
         />
+        
+        {/* Render the Panel when hovered */}
+        {hovered && <DetailPanel target={hovered} />}
+
       </Center>
 
       <EffectComposer autoClear={false} multisampling={0}>
@@ -260,11 +307,11 @@ function Island() {
     </>
   );
 }
+
 export default function Scene() {
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
       
-      {/* 2. Add the Overlay here */}
       <Overlay />
       
       <Canvas 
