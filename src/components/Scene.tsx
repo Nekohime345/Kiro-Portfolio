@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, ThreeEvent } from "@react-three/fiber"; // Added ThreeEvent
+import { Canvas, useFrame, extend, type ThreeEvent } from "@react-three/fiber"; // Added ThreeEvent
 import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor, Html } from "@react-three/drei";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 import Overlay from "./Overlay"; 
