@@ -21,24 +21,19 @@ export default function Overlay() {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      padding: '40px',
+      padding: '50px', // Increased padding slightly
       boxSizing: 'border-box',
       zIndex: 10,
       overflow: 'hidden' 
     }}>
       <style>
-        {`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap');`}
+        {`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;700&display=swap');`}
       </style>
 
-      {/* 
-         DYNAMIC CONTENT AREA (The Background Click Handler)
-      */}
+      {/* DYNAMIC CONTENT AREA */}
       <div 
         onClick={(e) => {
-           // Only close if clicking the background, not the inner content cards
-           if (e.target === e.currentTarget) {
-             setSection(null);
-           }
+           if (e.target === e.currentTarget) setSection(null);
         }}
         style={{ 
           position: 'absolute', 
@@ -46,10 +41,8 @@ export default function Overlay() {
           left: 0, 
           width: '100%', 
           height: '100%', 
-          zIndex: 0, // Behind the nav/title
-          // KEY CHANGE: Block interactions when a section is open, pass through when closed
+          zIndex: 0, 
           pointerEvents: section ? 'auto' : 'none',
-          // Optional: Show a zoom-out cursor to indicate "closing" is possible
           cursor: section ? 'zoom-out' : 'default'
         }}
       >
@@ -61,10 +54,7 @@ export default function Overlay() {
         </AnimatePresence>
       </div>
 
-      {/* 
-          ANIMATED TITLE 
-          (Resets to home when clicked)
-      */}
+      {/* ANIMATED TITLE */}
       <motion.div
         initial={{ 
           top: "50%", 
@@ -74,8 +64,8 @@ export default function Overlay() {
           textAlign: "center"
         }}
         animate={{ 
-          top: "40px", 
-          left: "40px", 
+          top: "60px", 
+          left: "60px", 
           transform: "translate(0%, 0%)", 
           textAlign: "left"
         }}
@@ -92,12 +82,14 @@ export default function Overlay() {
             fontFamily: "'Bebas Neue', sans-serif", 
             margin: 0, 
             color: '#ffffff',
-            lineHeight: '0.9',
-            textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            lineHeight: '0.85',
+            // Stronger shadow for clarity
+            textShadow: '0 4px 20px rgba(0,0,0,0.5)', 
             whiteSpace: 'nowrap'
           }}
-          initial={{ fontSize: "200rem", opacity: 0 }} 
-          animate={{ fontSize: "4rem", opacity: 1 }}
+          initial={{ fontSize: "15rem", opacity: 0 }} 
+          // INCREASED SIZE HERE (was 4rem)
+          animate={{ fontSize: "8rem", opacity: 1 }} 
           transition={{ 
             duration: 2.5, 
             ease: [0.16, 1, 0.3, 1], 
@@ -112,13 +104,16 @@ export default function Overlay() {
           transition={{ delay: 3.5, duration: 1 }}
           style={{ 
             fontFamily: "'Inter', sans-serif", 
-            margin: '5px 0 0 5px', 
-            color: 'rgba(255, 255, 255, 0.8)', 
-            fontSize: '0.9rem', 
-            letterSpacing: '1px' 
+            margin: '10px 0 0 5px', 
+            color: '#ffffff', // Pure white
+            // INCREASED SIZE (was 0.9rem)
+            fontSize: '1.2rem', 
+            fontWeight: '600',
+            letterSpacing: '2px',
+            textShadow: '0 2px 10px rgba(0,0,0,0.5)'
           }}
         >
-          WEB DEV & CYBERSECURITY
+          WEB AND GAME DEVELOPMENT
         </motion.p>
       </motion.div>
 
@@ -130,7 +125,7 @@ export default function Overlay() {
         style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 30 }}
       >
         <header style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <nav style={{ pointerEvents: 'auto', display: 'flex', gap: '30px' }}>
+          <nav style={{ pointerEvents: 'auto', display: 'flex', gap: '40px' }}>
             {['WORKS', 'ABOUT', 'CONTACT'].map((item) => (
               <button 
                 key={item} 
@@ -140,11 +135,14 @@ export default function Overlay() {
                   border: 'none',
                   fontFamily: "'Bebas Neue', sans-serif",
                   color: section === item.toLowerCase() ? '#00aaff' : 'white', 
-                  fontSize: '1.5rem',
+                  // INCREASED SIZE (was 1.5rem)
+                  fontSize: '2.5rem', 
                   cursor: 'pointer',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                  transition: 'color 0.3s ease'
+                  textShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                  transition: 'transform 0.2s, color 0.3s ease'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
                 {item}
               </button>
@@ -173,9 +171,15 @@ export default function Overlay() {
               RESUME
             </button>
           </div>
-          <div style={{ textAlign: 'right', color: 'white', opacity: 0.7 }}>
+          <div style={{ textAlign: 'right', color: 'white', opacity: 0.9 }}>
             {section === null && (
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.8rem', margin: 0 }}>
+              <p style={{ 
+                fontFamily: "'Inter', sans-serif", 
+                fontSize: '1rem', // INCREASED SIZE
+                fontWeight: 'bold',
+                margin: 0,
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+              }}>
                 DRAG TO EXPLORE
               </p>
             )}
@@ -187,15 +191,18 @@ export default function Overlay() {
 }
 
 const btnStyle = {
-  background: 'rgba(255, 255, 255, 0.15)',
-  backdropFilter: 'blur(10px)',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
+  background: 'rgba(255, 255, 255, 0.1)', // Slightly more transparent for glass effect
+  backdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255, 255, 255, 0.5)', // Brighter border
   color: 'white',
-  padding: '10px 20px',
-  borderRadius: '30px',
+  // BIGGER BUTTONS
+  padding: '14px 32px', 
+  borderRadius: '40px',
   fontFamily: "'Inter', sans-serif",
-  fontSize: '0.8rem',
-  fontWeight: '500',
+  fontSize: '1rem', // INCREASED SIZE (was 0.8rem)
+  fontWeight: '600',
+  letterSpacing: '1px',
   cursor: 'pointer',
-  transition: 'background 0.3s'
+  transition: 'background 0.3s, transform 0.2s',
+  boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
 };
