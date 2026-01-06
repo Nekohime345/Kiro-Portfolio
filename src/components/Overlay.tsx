@@ -9,7 +9,7 @@ import Resume from './pages/Resume';
 
 export default function Overlay() {
   const [section, setSection] = useState<string | null>(null);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
 
   // 1. CREATE A REF FOR THE AUDIO ELEMENT
   const audioRef = useRef<HTMLAudioElement | null>(null);
