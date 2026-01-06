@@ -159,7 +159,7 @@ export default function Overlay() {
               GITHUB
             </button>
             <button 
-              onClick={() => window.open('https://linkedin.com', '_blank')} 
+              onClick={() => window.open('https://www.linkedin.com/in/kiro-basanal-0432103a5/', '_blank')} 
               style={btnStyle}
             >
               LINKEDIN
