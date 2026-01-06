@@ -44,11 +44,11 @@ export default function About() {
         </p>
         
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', lineHeight: '1.6', color: '#bbb' }}>
-          My expertise lies in <strong>Javascript, C#, and </strong>, which I've used to build robust solutions like Management Systems. Beyond web apps, I have started to take interest on experiences on <strong>Roblox (Lua)</strong>.
+          My expertise lies in <strong>Javascript, C#, and HTML</strong>, which I've used to build robust solutions like Management Systems. Beyond web apps, I have started to take interest on experiences on <strong>Roblox (Lua)</strong>.
         </p>
         
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', lineHeight: '1.6', color: '#bbb' }}>
-          Currently expanding my skills in the Node.js ecosystem (React, Next.js, TypeScript). When I'm not coding, I'm likely debugging game logic or testing out different games.
+          Currently expanding my skills in the Node.js ecosystem (React, TypeScript). When I'm not coding, I'm likely debugging game logic or testing out different games.
         </p>
 
         <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
