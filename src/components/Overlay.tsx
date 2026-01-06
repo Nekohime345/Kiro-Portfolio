@@ -9,7 +9,7 @@ import Resume from './pages/Resume';
 
 export default function Overlay() {
   const [section, setSection] = useState<string | null>(null);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   // 1. CREATE A REF FOR THE AUDIO ELEMENT
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -20,16 +20,10 @@ export default function Overlay() {
       if (muted) {
         audioRef.current.pause();
       } else {
-        // 2. TRY TO PLAY IMMEDIATELY
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.log("Autoplay prevented by browser. User must interact first.");
-            // Optional: If autoplay fails, force UI to show 'muted' state so it matches reality
-            setMuted(true); 
-          });
-        }
+        // Play and catch errors (browsers block auto-play sometimes)
+        audioRef.current.play().catch((e) => {
+          console.log("Audio play failed (user interaction needed first):", e);
+        });
       }
     }
   }, [muted]);
@@ -54,10 +48,8 @@ export default function Overlay() {
       {/* 3. INVISIBLE AUDIO ELEMENT */}
       <audio 
         ref={audioRef} 
-        loop 
-        src="/assets/bg-music.mp3" 
-        // 3. ADD AUTOPLAY ATTRIBUTE AS BACKUP
-        autoPlay 
+        loop // Makes it repeat forever
+        src="/assets/OceanWaves.mp3" // Ensure this file exists!
       />
 
       <style>
