@@ -9,16 +9,13 @@ export default function Contact() {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
-
     setStatus("sending");
-
     try {
       const response = await fetch("https://formspree.io/f/xpqwkzgg", {
         method: "POST",
         body: data,
         headers: { 'Accept': 'application/json' }
       });
-
       if (response.ok) {
         setStatus("success");
         form.reset(); 
@@ -45,29 +42,9 @@ export default function Contact() {
           </p>
 
           <form onSubmit={handleSubmit} className="contact-form">
-            <input 
-              type="text" 
-              name="name" 
-              placeholder="Name" 
-              required
-              className="contact-input"
-            />
-
-            <input 
-              type="email" 
-              name="email" 
-              placeholder="Email" 
-              required
-              className="contact-input"
-            />
-
-            <textarea 
-              name="message" 
-              rows={4} 
-              placeholder="Message" 
-              required
-              className="contact-input contact-textarea"
-            />
+            <input type="text" name="name" placeholder="Name" required className="contact-input" />
+            <input type="email" name="email" placeholder="Email" required className="contact-input" />
+            <textarea name="message" rows={4} placeholder="Message" required className="contact-input contact-textarea" />
             
             <button 
               type="submit" 
@@ -82,9 +59,7 @@ export default function Contact() {
             </button>
 
             {status === "error" && (
-              <p className="error-msg">
-                Oops! Something went wrong. Please try again.
-              </p>
+              <p className="error-msg">Oops! Something went wrong. Please try again.</p>
             )}
           </form>
         </div>
@@ -92,6 +67,11 @@ export default function Contact() {
 
       {/* RESPONSIVE CSS STYLES */}
       <style>{`
+        /* GLOBAL RESET FOR CONTACT COMPONENT */
+        .contact-section * {
+          box-sizing: border-box;
+        }
+
         /* --- 1. DEFAULT (MOBILE PHONE) --- */
         .contact-section {
           position: absolute;
@@ -103,7 +83,12 @@ export default function Contact() {
           align-items: center;
           justify-content: center;
           pointer-events: none;
-          padding: 20px;
+          
+          /* FIX 1: Ensure padding is included in width calculation */
+          box-sizing: border-box;
+          
+          /* FIX 2: Add top padding to clear header on mobile, standard padding on sides */
+          padding: 80px 20px 20px 20px;
         }
 
         .contact-card {
@@ -117,6 +102,9 @@ export default function Contact() {
           width: 100%;
           max-width: 400px; /* Limits width on larger screens */
           box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          
+          /* FIX 3: Ensure card itself doesn't cause overflow */
+          box-sizing: border-box;
         }
 
         .contact-title {
@@ -149,7 +137,6 @@ export default function Contact() {
           outline: none;
           border-radius: 4px;
           width: 100%;
-          box-sizing: border-box; /* Ensures padding doesn't break width */
         }
 
         .contact-textarea {
@@ -189,7 +176,10 @@ export default function Contact() {
 
         /* --- 3. DESKTOP (PC, > 1024px) --- */
         @media (min-width: 1024px) {
-          .contact-section { padding: 0; }
+          .contact-section { 
+            /* Remove specific top padding on desktop */
+            padding: 0; 
+          }
           .contact-card {
             padding: 60px;
             width: 400px;

@@ -87,7 +87,7 @@ export default function Overlay() {
           width: '100%', 
           height: '100%', 
           // FIX: If a section is open, bring it to front (50). If closed, send to back (0).
-          zIndex: section ? 50 : 0, 
+          zIndex: section ? 0 : 0, 
           pointerEvents: section ? 'auto' : 'none',
           cursor: section ? 'zoom-out' : 'default',
           transition: 'z-index 0.2s step-end' // smooth transition

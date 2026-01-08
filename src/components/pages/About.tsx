@@ -13,7 +13,6 @@ export default function About() {
         <div className="about-container">
           <h2 className="about-title">WHO AM I?</h2>
           
-          {/* Scrollable Bio Content */}
           <div className="about-bio">
             <p>
               I'm a <strong>4th-year IT student</strong> at <strong>Cebu Technological University - Argao Campus</strong>, bridging the gap between Full-Stack Development and Game Development.
@@ -26,7 +25,6 @@ export default function About() {
             </p>
           </div>
 
-          {/* Skills Grid */}
           <div className="skills-grid">
             {['React / Next.js', 'PHP & MySQL', 'C# / ASP.NET', 'Roblox Lua', 'Firebase', 'Cybersec', 'TypeScript'].map(skill => (
               <span key={skill} className="skill-badge">
@@ -37,10 +35,6 @@ export default function About() {
         </div>
       </motion.section>
 
-      {/* 
-         RESPONSIVE STYLES 
-         This handles Mobile, Tablet (iPad), and Desktop automatically.
-      */}
       <style>{`
         /* --- 1. DEFAULT (MOBILE PHONE) --- */
         .about-section {
@@ -52,16 +46,22 @@ export default function About() {
           display: flex;
           align-items: center;
           justify-content: center;
-          pointer-events: none; /* Allows clicks to pass through to close overlay */
-          padding: 15px;
+          pointer-events: none;
+          
+          /* FIX 1: Add Box Sizing */
+          box-sizing: border-box; 
+          
+          /* FIX 2: Add padding so it doesn't touch edges or cover header */
+          padding: 80px 20px 20px 20px; 
         }
 
         .about-container {
-          pointer-events: auto; /* Re-enable clicks for the card itself */
-          width: 95%;
-          max-height: 85vh; /* Prevents getting cut off by address bars */
+          pointer-events: auto;
+          width: 100%; 
+          max-width: 500px; /* Limits width so it doesn't stretch too wide */
+          max-height: 85vh;
           overflow-y: auto;
-          background: rgba(0, 0, 0, 0.85); /* Slightly darker for readability */
+          background: rgba(0, 0, 0, 0.85);
           backdrop-filter: blur(20px);
           padding: 25px 20px;
           border-radius: 20px;
@@ -69,6 +69,7 @@ export default function About() {
           color: white;
           text-align: center;
           scrollbar-width: none;
+          box-sizing: border-box; /* Ensure padding inside container is handled too */
         }
         
         .about-container::-webkit-scrollbar { display: none; }
@@ -125,7 +126,10 @@ export default function About() {
 
         /* --- 3. DESKTOP (Laptop/PC > 1024px) --- */
         @media (min-width: 1024px) {
-          .about-section { padding: 0; }
+          .about-section { 
+             /* Remove top padding on desktop since header is on the side/top-left */
+             padding: 0; 
+          }
           .about-container {
             width: 90%;
             max-width: 800px;
