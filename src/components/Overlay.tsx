@@ -74,10 +74,11 @@ export default function Overlay() {
         background: 'radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%)'
       }} />
 
+
       {/* DYNAMIC CONTENT AREA */}
       <div 
         onClick={(e) => {
-           if (e.target === e.currentTarget) setSection(null);
+          if (e.target === e.currentTarget) setSection(null);
         }}
         style={{ 
           position: 'absolute', 
@@ -85,9 +86,11 @@ export default function Overlay() {
           left: 0, 
           width: '100%', 
           height: '100%', 
-          zIndex: 0, 
+          // FIX: If a section is open, bring it to front (50). If closed, send to back (0).
+          zIndex: section ? 50 : 0, 
           pointerEvents: section ? 'auto' : 'none',
-          cursor: section ? 'zoom-out' : 'default'
+          cursor: section ? 'zoom-out' : 'default',
+          transition: 'z-index 0.2s step-end' // smooth transition
         }}
       >
         <AnimatePresence mode='wait'>
@@ -97,6 +100,7 @@ export default function Overlay() {
           {section === 'resume' && <Resume key="resume" />}
         </AnimatePresence>
       </div>
+
 
       {/* 
           ANIMATED TITLE 
