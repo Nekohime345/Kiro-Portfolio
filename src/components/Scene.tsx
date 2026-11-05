@@ -130,7 +130,8 @@ function LogoEnvironment({ enabled, showGuides, logoRef }: {
 }
 
 function PointLightGuide({ lightRef }: { lightRef: RefObject<THREE.PointLight | null> }) {
-  useHelper(lightRef, THREE.PointLightHelper, 1);
+  // Drei's useHelper type predates React 19's nullable RefObject.current type.
+  useHelper(lightRef as unknown as RefObject<THREE.Object3D>, THREE.PointLightHelper, 1);
   return null;
 }
 
@@ -138,7 +139,8 @@ function SpotLightGuide({ lightRef, color }: {
   lightRef: RefObject<THREE.SpotLight | null>;
   color: string;
 }) {
-  useHelper(lightRef, THREE.SpotLightHelper, color);
+  // Drei's useHelper type predates React 19's nullable RefObject.current type.
+  useHelper(lightRef as unknown as RefObject<THREE.Object3D>, THREE.SpotLightHelper, color);
   return null;
 }
 
@@ -358,7 +360,7 @@ export default function Scene() {
         <KBLogo logoRef={logoRef} onPositioned={() => setNavigationVisible(true)} />
         <CameraIntro onComplete={() => setCameraIntroFinished(true)} />
         <CameraPositionReadout onUpdate={setCameraReadout} />
-        {showPerformanceStats && <Stats parent={statsContainerRef} />}
+        {showPerformanceStats && <Stats parent={statsContainerRef as unknown as RefObject<HTMLElement>} />}
         {cameraIntroFinished && (
           <OrbitControls
             enableDamping
