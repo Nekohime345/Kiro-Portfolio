@@ -1,355 +1,462 @@
-import React, { useRef, useMemo, useState, useEffect } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Environment, Lightformer, OrbitControls, Stats, useAnimations, useGLTF, useHelper } from "@react-three/drei";
 import * as THREE from "three";
-import { Canvas, useFrame, extend, type ThreeEvent } from "@react-three/fiber"; // Added ThreeEvent
-import { OrbitControls, useGLTF, shaderMaterial, Center, useCursor, Html } from "@react-three/drei";
-import { EffectComposer, Outline } from "@react-three/postprocessing";
-import Overlay from "./Overlay"; 
+import Overlay from "./Overlay";
 
-// ------------------------------------------------------------------
-// DATA FOR THE PANELS (Typed)
-// ------------------------------------------------------------------
-type ObjectDataKey = "House" | "Lighthouse" | "SailorBoat" | "SignalTower" | "Boat" | "Shack" | "Dock";
-
-const objectData: Record<ObjectDataKey, { title: string; desc: string }> = {
-  House: { title: "Main Residence", desc: "A cozy retreat overlooking the ocean." },
-  Lighthouse: { title: "The Beacon", desc: "Guides sailors safely to the shore at night." },
-  SailorBoat: { title: "Fishing Vessel", desc: "Used for daily catches and deep sea travel." },
-  SignalTower: { title: "Radio Tower", desc: "Broadcasts signals to the mainland." },
-  Boat: { title: "Small Dinghy", desc: "Perfect for quick trips around the island." },
-  Shack: { title: "Storage Shack", desc: "Holds tools, nets, and supplies." },
-  Dock: { title: "The Pier", desc: "The main entry point for all visitors." }
+type CameraReadout = {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
 };
 
-// ------------------------------------------------------------------
-// 1. DEFINE THE VORONOI WATER MATERIAL
-// ------------------------------------------------------------------
-const WaterShaderMaterial = shaderMaterial(
-  {
-    uTime: 0,
-    uColorDeep: new THREE.Color("#0088cc"),
-    uColorSurface: new THREE.Color("#ffffff"),
-    uBigWavesElevation: 0.1,
-    uBigWavesFrequency: new THREE.Vector2(4, 1.5),
-    uBigWavesSpeed: 0.75,
-    uScale: 12.0, 
-  },
-  // VERTEX SHADER
-  `
-    uniform float uTime;
-    uniform float uBigWavesElevation;
-    uniform vec2 uBigWavesFrequency;
-    uniform float uBigWavesSpeed;
-    varying float vElevation;
-    varying vec2 vUv;
-    
-    void main() {
-      vUv = uv; 
-      vec4 modelPosition = modelMatrix * vec4(position, 1.0);
-      float elevation = sin(modelPosition.x * uBigWavesFrequency.x + uTime * uBigWavesSpeed) *
-                        sin(modelPosition.z * uBigWavesFrequency.y + uTime * uBigWavesSpeed) *
-                        uBigWavesElevation;
-      modelPosition.y += elevation;
-      vElevation = elevation;
-      vec4 viewPosition = viewMatrix * modelPosition;
-      vec4 projectedPosition = projectionMatrix * viewPosition;
-      gl_Position = projectedPosition;
-    }
-  `,
-  // FRAGMENT SHADER
-  `
-    uniform float uTime;
-    uniform vec3 uColorDeep;
-    uniform vec3 uColorSurface;
-    uniform float uScale;
-    varying vec2 vUv;
-    varying float vElevation;
+type ReflectionPanel = {
+  intensity: number;
+  color: string;
+  position: [number, number, number];
+  scale: [number, number, number];
+};
 
-    vec2 random2(vec2 p) {
-        return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
-    }
+const reflectionPanels: ReflectionPanel[] = [
+  { intensity: 0.4, color: "#ffffff", position: [0, 0, 16], scale: [8, 8, 1] },
+  { intensity: 0.4, color: "#fff2c2", position: [-10, 0, 10], scale: [7, 9, 1] },
+  { intensity: 0.4, color: "#ffffff", position: [-7, 5, 12], scale: [7, 9, 1] },
+  { intensity: 0.4, color: "#ffd66b", position: [0, 7, 14], scale: [7, 9, 1] },
+  { intensity: 0.4, color: "#ffffff", position: [7, 5, 12], scale: [7, 9, 1] },
+  { intensity: 0.4, color: "#fff2c2", position: [10, 0, 10], scale: [7, 9, 1] },
+  { intensity: 0.4, color: "#ffd66b", position: [-7, -5, 11], scale: [7, 8, 1] },
+  { intensity: 0.4, color: "#ffffff", position: [0, -7, 13], scale: [7, 8, 1] },
+  { intensity: 0.4, color: "#ffd66b", position: [7, -5, 11], scale: [7, 8, 1] },
+  ...Array.from({ length: 24 }, (_, index): ReflectionPanel => {
+    const angle = (index / 24) * Math.PI * 2;
+    return {
+      intensity: 0.4,
+      color: index % 3 === 0 ? "#ffd66b" : "#fff2c2",
+      position: [Math.sin(angle) * 25, 0, Math.cos(angle) * 25],
+      scale: [8, 12, 1],
+    };
+  }),
+];
 
-    void main() {
-        vec2 st = vUv * uScale;
-        vec2 i_st = floor(st);
-        vec2 f_st = fract(st);
-        float m_dist = 1.0; 
-        
-        for (int y= -1; y <= 1; y++) {
-            for (int x= -1; x <= 1; x++) {
-                vec2 neighbor = vec2(float(x),float(y));
-                vec2 point = random2(i_st + neighbor);
-                point = 0.5 + 0.5 * sin(uTime * 1.5 + 6.2831 * point);
-                vec2 diff = neighbor + point - f_st;
-                float dist = length(diff);
-                m_dist = min(m_dist, dist);
-            }
-        }
-        
-        vec3 waterColor = mix(uColorDeep, uColorSurface, pow(m_dist, 20.0)); 
-        gl_FragColor = vec4(waterColor, 0.9);
-        #include <colorspace_fragment>
-    }
-  `
-);
-extend({ WaterShaderMaterial });
+function LightformerGuide({ panel, target, logoRef }: {
+  panel: ReflectionPanel;
+  target: [number, number, number];
+  logoRef: RefObject<THREE.Group | null>;
+}) {
+  const guideRef = useRef<THREE.Group>(null);
+  const worldTarget = useMemo(() => new THREE.Vector3(), []);
+  const logoPosition = useMemo(() => new THREE.Vector3(), []);
 
-// ------------------------------------------------------------------
-// 4. DEFINE THE SKY MATERIAL
-// ------------------------------------------------------------------
-const SkyShaderMaterial = shaderMaterial(
-  {
-    uColorBottom: new THREE.Color("#dbeafe"),
-    uColorTop: new THREE.Color("#00aaff"),
-    uCloudColor: new THREE.Color("#ffffff"),
-    uCloudShadow: new THREE.Color("#c8dbe5"),
-    uTime: 0,
-    uCloudScale: 1.2, 
-    uCloudDensity: 0.55,
-  },
-  `
-    varying vec3 vWorldPosition;
-    void main() {
-      vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
-      vWorldPosition = worldPosition.xyz;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-    }
-  `,
-  `
-    uniform vec3 uColorBottom;
-    uniform vec3 uColorTop;
-    uniform vec3 uCloudColor;
-    uniform vec3 uCloudShadow;
-    uniform float uTime;
-    uniform float uCloudScale;
-    uniform float uCloudDensity;
-    varying vec3 vWorldPosition;
-    vec3 hash33(vec3 p3) {
-        p3 = fract(p3 * vec3(.1031, .1030, .0973));
-        p3 += dot(p3, p3.yxz + 33.33);
-        return fract((p3.xxy + p3.yxx) * p3.zyx);
-    }
-    float voronoi(vec3 x) {
-        vec3 n = floor(x);
-        vec3 f = fract(x);
-        vec2 res = vec2(100.0);
-        for(int k=-1; k<=1; k++) {
-            for(int j=-1; j<=1; j++) {
-                for(int i=-1; i<=1; i++) {
-                    vec3 b = vec3(float(i), float(j), float(k));
-                    vec3 r = vec3(b) - f + hash33(n + b);
-                    float d = dot(r, r);
-                    if(d < res.x) {
-                        res = vec2(d, res.x);
-                    }
-                }
-            }
-        }
-        return 1.0 - sqrt(res.x);
-    }
-    void main() {
-        vec3 normalizedPos = normalize(vWorldPosition);
-        float h = normalizedPos.y;
-        vec3 skyColor = mix(uColorBottom, uColorTop, max(h, 0.0));
-        vec3 cloudPos = vWorldPosition * uCloudScale * 0.05 + vec3(uTime * 0.1, 0.0, 0.0);
-        float noiseVal = voronoi(cloudPos);
-        float detail = voronoi(cloudPos * 3.0 + vec3(2.0));
-        noiseVal = mix(noiseVal, detail, 0.3);
-        float cloudCoverage = smoothstep(uCloudDensity, uCloudDensity + 0.05, noiseVal);
-        float internalShading = smoothstep(uCloudDensity, uCloudDensity + 0.2, noiseVal);
-        vec3 cloudBaseColor = mix(uCloudShadow, uCloudColor, internalShading);
-        vec3 finalColor = mix(skyColor, cloudBaseColor, cloudCoverage);
-        float horizonFade = smoothstep(0.0, 0.1, h);
-        finalColor = mix(uColorBottom, finalColor, horizonFade);
-        gl_FragColor = vec4(finalColor, 1.0);
-    }
-  `
-);
-extend({ SkyShaderMaterial });
-
-function Sky() {
-  // Fix: Explicitly type the ref so we can access uTime safely
-  const skyRef = useRef<THREE.ShaderMaterial>(null);
-
-  useFrame((_, delta) => {
-    if (skyRef.current) {
-      // Fix: Access uTime safely by letting TS know it exists on our custom shader
-      (skyRef.current.uniforms.uTime.value as number) += delta;
-      // Alternatively, if you defined uTime as a property on the material instance directly:
-      // (skyRef.current as any).uTime += delta;
-    }
+  useFrame(() => {
+    if (!guideRef.current || !logoRef.current) return;
+    logoRef.current.getWorldPosition(logoPosition);
+    worldTarget.set(target[0], target[1], target[2]).add(logoPosition);
+    guideRef.current.lookAt(worldTarget);
   });
 
   return (
-    <mesh>
-      <sphereGeometry args={[500, 32, 32]} />
-      {/* @ts-ignore */}
-      <skyShaderMaterial 
-        ref={skyRef} 
-        side={THREE.BackSide} 
-        uCloudScale={0.1} 
-        uCloudDensity={0.4} 
-        uCloudColor="#ffffff"
-        uCloudShadow="#ffffff" 
-      />
-    </mesh>
+    <group ref={guideRef} position={panel.position} scale={panel.scale}>
+      <mesh>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          color={panel.color}
+          transparent
+          opacity={0.16}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0.01]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          color={panel.color}
+          wireframe
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
   );
 }
 
-// ------------------------------------------------------------------
-// 2. WATER COMPONENT
-// ------------------------------------------------------------------
-function Water() {
-  // Fix: Type ref
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+function LightformerGuides({ visible, target, logoRef }: {
+  visible: boolean;
+  target: [number, number, number];
+  logoRef: RefObject<THREE.Group | null>;
+}) {
+  const guideRigRef = useRef<THREE.Group>(null);
+  const logoPosition = useMemo(() => new THREE.Vector3(), []);
 
-  useFrame((_, delta) => {
-    if (materialRef.current) {
-       // Fix: Access uTime safely
-       (materialRef.current.uniforms.uTime.value as number) += delta;
-       // Or: (materialRef.current as any).uTime += delta; 
-    }
+  useFrame(() => {
+    if (!guideRigRef.current || !logoRef.current) return;
+    logoRef.current.getWorldPosition(logoPosition);
+    guideRigRef.current.position.copy(logoPosition);
   });
 
+  if (!visible) return null;
+
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[1000, 1000, 256, 256]} /> 
-      {/* @ts-ignore */}
-      <waterShaderMaterial 
-        ref={materialRef} 
-        transparent 
-        depthWrite={false}
-        uScale={400.0}
-        uColorDeep="#00AAFF" 
-        uColorSurface="#00FFff" 
-      />
-    </mesh>
+    <group ref={guideRigRef}>
+      {reflectionPanels.map((panel, index) => (
+        <LightformerGuide key={index} panel={panel} target={target} logoRef={logoRef} />
+      ))}
+    </group>
   );
 }
 
-// ------------------------------------------------------------------
-// 3. ISLAND & SCENE
-// ------------------------------------------------------------------
-
-// Helper interface for props
-interface DetailPanelProps {
-  target: THREE.Object3D;
-}
-
-function DetailPanel({ target }: DetailPanelProps) {
-  const [position, setPosition] = useState(new THREE.Vector3());
-  
-  // Fix: Safe access to objectData with fallback
-  const name = target.name as ObjectDataKey;
-  const data = objectData[name] || { title: target.name, desc: "No description available." };
-
-  useEffect(() => {
-    if (target) {
-      const box = new THREE.Box3().setFromObject(target);
-      const center = box.getCenter(new THREE.Vector3());
-      center.y = box.max.y + 0.5;
-      setPosition(center);
-    }
-  }, [target]);
-
-  return (
-    <Html position={position} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-      <div style={{
-        background: "rgba(255, 255, 255, 0.9)",
-        padding: "12px 16px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        border: "1px solid #e5e7eb",
-        minWidth: "200px",
-        fontFamily: "Arial, sans-serif",
-        textAlign: "left"
-      }}>
-        <h3 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "bold", color: "#1f2937" }}>
-          {data.title}
-        </h3>
-        <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
-          {data.desc}
-        </p>
-      </div>
-    </Html>
-  );
-}
-
-function Island() {
-  const { scene } = useGLTF("/assets/models/island-model/Portfolio_island_final.glb");
-  const [hovered, setHover] = useState<THREE.Object3D | null>(null);
-  
-  const targetNames = ["House", "Lighthouse", "SailorBoat", "SignalTower", "Boat", "Shack", "Dock"];
-  useCursor(!!hovered);
-
-  const selection = useMemo(() => (hovered ? [hovered] : []), [hovered]);
+function LogoEnvironment({ enabled, showGuides, logoRef }: {
+  enabled: boolean;
+  showGuides: boolean;
+  logoRef: RefObject<THREE.Group | null>;
+}) {
+  const { scene } = useGLTF("/assets/models/KBLogo/KBLOGO.glb");
+  const target = useMemo<[number, number, number]>(() => {
+    scene.updateMatrixWorld(true);
+    const center = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3());
+    center.applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+    return [center.x, center.y, center.z];
+  }, [scene]);
 
   return (
     <>
-      <Center disableY>
-        <primitive 
-          object={scene} 
-          scale={1} 
-          // Fix: Type the event properly
-          onPointerOver={(e: ThreeEvent<PointerEvent>) => {
-            e.stopPropagation();
-            const hitObject = e.object;
-            if (targetNames.includes(hitObject.name)) {
-              setHover(hitObject);
-            } else if (hitObject.parent && targetNames.includes(hitObject.parent.name)) {
-              setHover(hitObject.parent);
-            } else {
-              setHover(null);
-            }
-          }}
-          onPointerOut={(e: ThreeEvent<PointerEvent>) => {
-            e.stopPropagation();
-            setHover(null);
-          }}
-        />
-        
-        {hovered && <DetailPanel target={hovered} />}
-
-      </Center>
-
-      <EffectComposer autoClear={false} multisampling={0}>
-        <Outline
-          selection={selection}
-          visibleEdgeColor={0xffffff} 
-          hiddenEdgeColor={0xffffff} 
-          blur
-          edgeStrength={10}
-        />
-      </EffectComposer>
+      {enabled && <Environment resolution={256} background={false}>
+        {reflectionPanels.map((panel, index) => (
+          <Lightformer key={index} form="rect" target={target} {...panel} />
+        ))}
+      </Environment>}
+      <LightformerGuides visible={showGuides} target={target} logoRef={logoRef} />
     </>
   );
 }
 
-export default function Scene() {
+function PointLightGuide({ lightRef }: { lightRef: RefObject<THREE.PointLight | null> }) {
+  useHelper(lightRef, THREE.PointLightHelper, 1);
+  return null;
+}
+
+function SpotLightGuide({ lightRef, color }: {
+  lightRef: RefObject<THREE.SpotLight | null>;
+  color: string;
+}) {
+  useHelper(lightRef, THREE.SpotLightHelper, color);
+  return null;
+}
+
+function StudioLights({ enabled, showHelpers, logoRef }: {
+  enabled: boolean;
+  showHelpers: boolean;
+  logoRef: RefObject<THREE.Group | null>;
+}) {
+  const keyLight = useRef<THREE.PointLight>(null);
+  const fillLight = useRef<THREE.SpotLight>(null);
+  const backLight = useRef<THREE.SpotLight>(null);
+  const lightRigRef = useRef<THREE.Group>(null);
+  const logoPosition = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    const target = logoRef.current;
+    if (!target) return;
+    if (fillLight.current) fillLight.current.target = target;
+    if (backLight.current) backLight.current.target = target;
+  }, [logoRef]);
+
+  useFrame(() => {
+    if (!lightRigRef.current || !logoRef.current) return;
+    logoRef.current.getWorldPosition(logoPosition);
+    lightRigRef.current.position.copy(logoPosition);
+  });
+
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-      
-      <Overlay />
-      
-      <Canvas 
-        dpr={[1, 1.5]} 
+    <group ref={lightRigRef}>
+      <pointLight ref={keyLight} position={[-7, 8, 10]} color="#fff1d6" intensity={enabled ? 1000 : 0} decay={2} />
+      <spotLight ref={fillLight} position={[8, 2, 8]} color="#c7ddff" intensity={enabled ? 45 : 0} angle={Math.PI / 3} penumbra={0.8} decay={2} />
+      <spotLight ref={backLight} position={[0, 7, -9]} color="#ffd36b" intensity={enabled ? 130 : 0} angle={Math.PI / 3} penumbra={0.7} decay={2} />
+      {showHelpers && <>
+        <PointLightGuide lightRef={keyLight} />
+        <SpotLightGuide lightRef={fillLight} color="#c7ddff" />
+        <SpotLightGuide lightRef={backLight} color="#ffd36b" />
+      </>}
+    </group>
+  );
+}
+
+function CameraPositionReadout({ onUpdate }: { onUpdate: (readout: CameraReadout) => void }) {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    const update = () => {
+      onUpdate({
+        position: camera.position.clone(),
+        rotation: camera.rotation.clone(),
+      });
+    };
+
+    update();
+    const intervalId = window.setInterval(update, 100);
+    return () => window.clearInterval(intervalId);
+  }, [camera, onUpdate]);
+
+  return null;
+}
+
+function CameraIntro({ onComplete }: { onComplete: () => void }) {
+  const { camera } = useThree();
+  const elapsed = useRef(0);
+  const finished = useRef(false);
+  const duration = 10.1;
+  
+  useFrame((_, delta) => {
+    if (finished.current) return;
+
+    elapsed.current = Math.min(elapsed.current + delta, duration);
+    const progress = elapsed.current / duration;
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    camera.position.set(0, 0, 25 * easedProgress);
+
+    if (progress > 0) camera.lookAt(0, 0, 0);
+
+    if (progress >= 1) {
+      finished.current = true;
+      onComplete();
+    }
+  });
+
+  return null;
+}
+
+function KBLogo({ logoRef, onPositioned }: {
+  logoRef: RefObject<THREE.Group | null>;
+  onPositioned: () => void;
+}) {
+  const { scene, animations } = useGLTF("/assets/models/KBLogo/KBLOGO.glb");
+  const { actions, mixer } = useAnimations(animations, scene);
+  const { size, viewport } = useThree();
+  const [animationFinished, setAnimationFinished] = useState(false);
+  const [moveStarted, setMoveStarted] = useState(false);
+  const moveElapsed = useRef(0);
+  const hasNotifiedPosition = useRef(false);
+  const spinDelaySeconds = 4;
+  const moveDuration = 1.6;
+  useFrame((_, delta) => {
+    const logo = logoRef.current;
+    if (!logo) return;
+
+    if (animationFinished) logo.rotation.y += delta * 0.5;
+    if (!moveStarted) return;
+
+    moveElapsed.current = Math.min(moveElapsed.current + delta, moveDuration);
+    const progress = moveElapsed.current / moveDuration;
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const isSmallScreen = size.width <= 768;
+    const targetX = 15;
+    const targetY = isSmallScreen ? viewport.height * 0.14 : 0;
+    const targetScale = isSmallScreen ? 0.68 : 0.78;
+
+    logo.position.set(targetX * easedProgress, targetY * easedProgress, 0);
+    logo.scale.setScalar(1 + (targetScale - 1) * easedProgress);
+
+    if (progress >= 1 && !hasNotifiedPosition.current) {
+      hasNotifiedPosition.current = true;
+      onPositioned();
+    }
+  });
+
+  useEffect(() => {
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const createGoldMaterial = () => new THREE.MeshStandardMaterial({
+        color: "#d4af37",
+        metalness: 1,
+        roughness: 0,
+      });
+      object.material = Array.isArray(object.material)
+        ? object.material.map(createGoldMaterial)
+        : createGoldMaterial();
+    });
+  }, [scene]);
+
+  useEffect(() => {
+    const animationActions = Object.values(actions).filter(
+      (action): action is THREE.AnimationAction => action !== null && action !== undefined,
+    );
+
+    if (animationActions.length === 0) {
+      const timeoutId = window.setTimeout(() => {
+        setAnimationFinished(true);
+        setMoveStarted(true);
+      }, spinDelaySeconds * 1000);
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    setAnimationFinished(false);
+    const finishedActions = new Set<THREE.AnimationAction>();
+    let spinDelayTimeout: number | undefined;
+    const onFinished = (event: { action: THREE.AnimationAction }) => {
+      finishedActions.add(event.action);
+      if (finishedActions.size === animationActions.length) {
+        spinDelayTimeout = window.setTimeout(() => {
+          setAnimationFinished(true);
+          setMoveStarted(true);
+        }, spinDelaySeconds * 1000);
+      }
+    };
+
+    mixer.addEventListener("finished", onFinished);
+    animationActions.forEach((action) => {
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
+    });
+
+    return () => {
+      mixer.removeEventListener("finished", onFinished);
+      if (spinDelayTimeout !== undefined) window.clearTimeout(spinDelayTimeout);
+      animationActions.forEach((action) => action.stop());
+    };
+  }, [actions, mixer, spinDelaySeconds]);
+
+  return (
+    <group ref={logoRef}>
+      <group rotation={[Math.PI / 2, 0, 0]}>
+        <primitive object={scene} position={[0, 0, 0]} />
+      </group>
+    </group>
+  );
+}
+
+export default function Scene() {
+  const logoRef = useRef<THREE.Group>(null);
+  const statsContainerRef = useRef<HTMLDivElement>(null);
+  const [lightformersEnabled, setLightformersEnabled] = useState(true);
+  const [studioLightsEnabled, setStudioLightsEnabled] = useState(true);
+  const [showLightformerGuides, setShowLightformerGuides] = useState(false);
+  const [showStudioLightHelpers, setShowStudioLightHelpers] = useState(false);
+  const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
+  const [navigationVisible, setNavigationVisible] = useState(false);
+  const [showPerformanceStats, setShowPerformanceStats] = useState(true);
+  const [cameraReadout, setCameraReadout] = useState<CameraReadout>({
+    position: new THREE.Vector3(0, 0, 0),
+    rotation: new THREE.Euler(0, 0, 0),
+  });
+  const rotationDegrees = {
+    x: THREE.MathUtils.radToDeg(cameraReadout.rotation.x),
+    y: THREE.MathUtils.radToDeg(cameraReadout.rotation.y),
+    z: THREE.MathUtils.radToDeg(cameraReadout.rotation.z),
+  };
+  const format = (value: number) => value.toFixed(2);
+
+  return (
+    <div style={{ position: "relative", width: "100vw", height: "100vh", background: "#000" }}>
+      <Canvas
+        dpr={[1, 1.5]}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        camera={{ position: [0, 3, 6], fov: 60 }}
+        camera={{ position: [0, 0, 0], rotation: [0, 0, 0], fov: 60 }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 5, 5]} intensity={1} />
-        
-        <Water />
-        <Sky />
-        <Island />
-        
-        <OrbitControls 
-          enableDamping 
-          maxPolarAngle={Math.PI / 2 - 0.1}
-          enablePan={false} 
-          minDistance={3}
-          maxDistance={8}
-        />
+        <LogoEnvironment enabled={lightformersEnabled} showGuides={showLightformerGuides} logoRef={logoRef} />
+        <StudioLights enabled={studioLightsEnabled} showHelpers={showStudioLightHelpers} logoRef={logoRef} />
+        <KBLogo logoRef={logoRef} onPositioned={() => setNavigationVisible(true)} />
+        <CameraIntro onComplete={() => setCameraIntroFinished(true)} />
+        <CameraPositionReadout onUpdate={setCameraReadout} />
+        {showPerformanceStats && <Stats parent={statsContainerRef} />}
+        {cameraIntroFinished && (
+          <OrbitControls
+            enableDamping
+            maxPolarAngle={Math.PI / 2 - 0}
+            enablePan={false}
+            minDistance={0}
+            maxDistance={100}
+          />
+        )}
       </Canvas>
+
+      <Overlay navigationVisible={navigationVisible} />
+
+      {showPerformanceStats && (
+        <div
+          ref={statsContainerRef}
+          style={{ position: "absolute", left: 16, bottom: 80, zIndex: 20, pointerEvents: "auto" }}
+        />
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          padding: "12px 16px",
+          borderRadius: 8,
+          color: "#f8fafc",
+          background: "rgba(0, 0, 0, 0.72)",
+          font: "13px/1.6 monospace",
+          pointerEvents: "none",
+        }}
+      >
+        <div>Camera position</div>
+        <div>
+          x: {format(cameraReadout.position.x)} &nbsp; y: {format(cameraReadout.position.y)} &nbsp; z: {format(cameraReadout.position.z)}
+        </div>
+        <div style={{ marginTop: 6 }}>Camera rotation (degrees)</div>
+        <div>
+          x: {format(rotationDegrees.x)} &nbsp; y: {format(rotationDegrees.y)} &nbsp; z: {format(rotationDegrees.z)}
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          padding: "10px 12px",
+          borderRadius: 8,
+          color: "#f8fafc",
+          background: "rgba(0, 0, 0, 0.72)",
+          font: "13px/1.6 monospace",
+        }}
+      >
+        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={lightformersEnabled}
+            onChange={(event) => setLightformersEnabled(event.target.checked)}
+          />
+          Enable lightformers
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={studioLightsEnabled}
+            onChange={(event) => setStudioLightsEnabled(event.target.checked)}
+          />
+          Enable key / fill / back lights
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={showLightformerGuides}
+            onChange={(event) => setShowLightformerGuides(event.target.checked)}
+          />
+          Show lightformer guides
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={showStudioLightHelpers}
+            onChange={(event) => setShowStudioLightHelpers(event.target.checked)}
+          />
+          Show key / fill / backlight helpers
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={showPerformanceStats}
+            onChange={(event) => setShowPerformanceStats(event.target.checked)}
+          />
+          Show performance stats
+        </label>
+      </div>
+
+
     </div>
   );
 }
