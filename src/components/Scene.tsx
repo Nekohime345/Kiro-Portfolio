@@ -37,6 +37,13 @@ const reflectionPanels: ReflectionPanel[] = [
   }),
 ];
 
+// Every logo mesh uses the same finish, so share one material across the model.
+const goldLogoMaterial = new THREE.MeshStandardMaterial({
+  color: "#d4af37",
+  metalness: 1,
+  roughness: 0,
+});
+
 function LightformerGuide({ panel, target, logoRef }: {
   panel: ReflectionPanel;
   target: [number, number, number];
@@ -194,7 +201,7 @@ function CameraPositionReadout({ onUpdate }: { onUpdate: (readout: CameraReadout
     };
 
     update();
-    const intervalId = window.setInterval(update, 100);
+    const intervalId = window.setInterval(update, 250);
     return () => window.clearInterval(intervalId);
   }, [camera, onUpdate]);
 
@@ -266,14 +273,7 @@ function KBLogo({ logoRef, onPositioned }: {
   useEffect(() => {
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
-      const createGoldMaterial = () => new THREE.MeshStandardMaterial({
-        color: "#d4af37",
-        metalness: 1,
-        roughness: 0,
-      });
-      object.material = Array.isArray(object.material)
-        ? object.material.map(createGoldMaterial)
-        : createGoldMaterial();
+      object.material = goldLogoMaterial;
     });
   }, [scene]);
 
@@ -336,7 +336,7 @@ export default function Scene() {
   const [showStudioLightHelpers, setShowStudioLightHelpers] = useState(false);
   const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
   const [navigationVisible, setNavigationVisible] = useState(false);
-  const [showPerformanceStats, setShowPerformanceStats] = useState(true);
+  const [showPerformanceStats, setShowPerformanceStats] = useState(false);
   const [cameraReadout, setCameraReadout] = useState<CameraReadout>({
     position: new THREE.Vector3(0, 0, 0),
     rotation: new THREE.Euler(0, 0, 0),
