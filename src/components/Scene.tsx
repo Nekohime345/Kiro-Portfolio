@@ -111,10 +111,11 @@ function LightformerGuides({ visible, target, logoRef }: {
   );
 }
 
-function LogoEnvironment({ enabled, showGuides, logoRef }: {
+function LogoEnvironment({ enabled, showGuides, logoRef, isSmallScreen }: {
   enabled: boolean;
   showGuides: boolean;
   logoRef: RefObject<THREE.Group | null>;
+  isSmallScreen: boolean;
 }) {
   const { scene } = useGLTF("/assets/models/KBLogo/KBLOGO.glb");
   const target = useMemo<[number, number, number]>(() => {
@@ -126,8 +127,8 @@ function LogoEnvironment({ enabled, showGuides, logoRef }: {
 
   return (
     <>
-      {enabled && <Environment resolution={256} background={false}>
-        {reflectionPanels.map((panel, index) => (
+      {enabled && <Environment resolution={isSmallScreen ? 128 : 256} background={false}>
+        {(isSmallScreen ? reflectionPanels.slice(0, 9) : reflectionPanels).map((panel, index) => (
           <Lightformer key={index} form="rect" target={target} {...panel} />
         ))}
       </Environment>}
@@ -151,10 +152,11 @@ function SpotLightGuide({ lightRef, color }: {
   return null;
 }
 
-function StudioLights({ enabled, showHelpers, logoRef }: {
+function StudioLights({ enabled, showHelpers, logoRef, isSmallScreen }: {
   enabled: boolean;
   showHelpers: boolean;
   logoRef: RefObject<THREE.Group | null>;
+  isSmallScreen: boolean;
 }) {
   const keyLight = useRef<THREE.PointLight>(null);
   const fillLight = useRef<THREE.SpotLight>(null);
@@ -167,7 +169,7 @@ function StudioLights({ enabled, showHelpers, logoRef }: {
     if (!target) return;
     if (fillLight.current) fillLight.current.target = target;
     if (backLight.current) backLight.current.target = target;
-  }, [logoRef]);
+  }, [logoRef, isSmallScreen]);
 
   useFrame(() => {
     if (!lightRigRef.current || !logoRef.current) return;
@@ -178,12 +180,14 @@ function StudioLights({ enabled, showHelpers, logoRef }: {
   return (
     <group ref={lightRigRef}>
       <pointLight ref={keyLight} position={[-7, 8, 10]} color="#fff1d6" intensity={enabled ? 1000 : 0} decay={2} />
-      <spotLight ref={fillLight} position={[8, 2, 8]} color="#c7ddff" intensity={enabled ? 45 : 0} angle={Math.PI / 3} penumbra={0.8} decay={2} />
-      <spotLight ref={backLight} position={[0, 7, -9]} color="#ffd36b" intensity={enabled ? 130 : 0} angle={Math.PI / 3} penumbra={0.7} decay={2} />
+      {!isSmallScreen && <>
+        <spotLight ref={fillLight} position={[8, 2, 8]} color="#c7ddff" intensity={enabled ? 45 : 0} angle={Math.PI / 3} penumbra={0.8} decay={2} />
+        <spotLight ref={backLight} position={[0, 7, -9]} color="#ffd36b" intensity={enabled ? 130 : 0} angle={Math.PI / 3} penumbra={0.7} decay={2} />
+      </>}
       {showHelpers && <>
         <PointLightGuide lightRef={keyLight} />
-        <SpotLightGuide lightRef={fillLight} color="#c7ddff" />
-        <SpotLightGuide lightRef={backLight} color="#ffd36b" />
+        {!isSmallScreen && <SpotLightGuide lightRef={fillLight} color="#c7ddff" />}
+        {!isSmallScreen && <SpotLightGuide lightRef={backLight} color="#ffd36b" />}
       </>}
     </group>
   );
@@ -337,6 +341,7 @@ export default function Scene() {
   const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
   const [navigationVisible, setNavigationVisible] = useState(false);
   const [showPerformanceStats, setShowPerformanceStats] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 768);
   const [cameraReadout, setCameraReadout] = useState<CameraReadout>({
     position: new THREE.Vector3(0, 0, 0),
     rotation: new THREE.Euler(0, 0, 0),
@@ -348,15 +353,21 @@ export default function Scene() {
   };
   const format = (value: number) => value.toFixed(2);
 
+  useEffect(() => {
+    const updateScreenSize = () => setIsSmallScreen(window.innerWidth <= 768);
+    window.addEventListener("resize", updateScreenSize);
+    return () => window.removeEventListener("resize", updateScreenSize);
+  }, []);
+
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", background: "#000" }}>
       <Canvas
-        dpr={[1, 1.5]}
-        gl={{ antialias: false, powerPreference: "high-performance" }}
-        camera={{ position: [0, 0, 0], rotation: [0, 0, 0], fov: 60 }}
+        dpr={isSmallScreen ? 1 : [1, 1.5]}
+        gl={{ antialias: false, alpha: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" }}
+        camera={{ position: [0, 0, 0], rotation: [0, 0, 0], fov: 60, near: 0.1, far: 100 }}
       >
-        <LogoEnvironment enabled={lightformersEnabled} showGuides={showLightformerGuides} logoRef={logoRef} />
-        <StudioLights enabled={studioLightsEnabled} showHelpers={showStudioLightHelpers} logoRef={logoRef} />
+        <LogoEnvironment enabled={lightformersEnabled} showGuides={showLightformerGuides} logoRef={logoRef} isSmallScreen={isSmallScreen} />
+        <StudioLights enabled={studioLightsEnabled} showHelpers={showStudioLightHelpers} logoRef={logoRef} isSmallScreen={isSmallScreen} />
         <KBLogo logoRef={logoRef} onPositioned={() => setNavigationVisible(true)} />
         <CameraIntro onComplete={() => setCameraIntroFinished(true)} />
         <CameraPositionReadout onUpdate={setCameraReadout} />
