@@ -111,8 +111,8 @@ export default function Resume() {
 
         .download-btn {
           margin-top: 20px;
-          background: #00aaff;
-          color: white;
+          background: linear-gradient(110deg, #ffe37a 0%, #ffc229 55%, #ed9414 100%);
+          color: #16120a;
           text-decoration: none;
           padding: 12px 30px; /* Smaller button on mobile */
           border-radius: 30px;
@@ -120,7 +120,7 @@ export default function Resume() {
           font-size: 1.2rem;
           pointer-events: auto;
           letter-spacing: 1px;
-          box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+          box-shadow: 0 8px 28px rgba(255, 178, 22, 0.22);
           transition: transform 0.2s;
           cursor: pointer;
           white-space: nowrap;

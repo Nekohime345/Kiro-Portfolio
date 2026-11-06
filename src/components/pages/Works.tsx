@@ -77,9 +77,9 @@ export default function Works() {
         }
 
         .project-card {
-          background: rgba(0, 0, 0, 0.6);
+          background: linear-gradient(145deg, rgba(20, 19, 15, 0.93), rgba(8, 9, 11, 0.94));
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 198, 48, 0.2);
           border-radius: 16px;
           padding: 20px; /* Smaller padding on mobile */
           cursor: pointer;
@@ -88,7 +88,7 @@ export default function Works() {
         
         .project-card:hover {
           background: rgba(0, 0, 0, 0.75);
-          border-color: rgba(0, 170, 255, 0.5);
+          border-color: rgba(255, 198, 48, 0.62);
         }
 
         .project-title {
@@ -102,7 +102,7 @@ export default function Works() {
         .project-category {
           font-family: 'Inter', sans-serif;
           font-size: 0.7rem;
-          background: rgba(255,255,255,0.15);
+          background: rgba(255,198,48,0.12);
           padding: 4px 8px;
           border-radius: 4px;
           color: #ddd;

@@ -243,7 +243,7 @@ function KBLogo({ logoRef, onPositioned }: {
 }) {
   const { scene, animations } = useGLTF("/assets/models/KBLogo/KBLOGO.glb");
   const { actions, mixer } = useAnimations(animations, scene);
-  const { size, viewport } = useThree();
+  const { size } = useThree();
   const [animationFinished, setAnimationFinished] = useState(false);
   const [moveStarted, setMoveStarted] = useState(false);
   const moveElapsed = useRef(0);
@@ -261,9 +261,9 @@ function KBLogo({ logoRef, onPositioned }: {
     const progress = moveElapsed.current / moveDuration;
     const easedProgress = 1 - Math.pow(1 - progress, 3);
     const isSmallScreen = size.width <= 768;
-    const targetX = 15;
-    const targetY = isSmallScreen ? viewport.height * 0.14 : 0;
-    const targetScale = isSmallScreen ? 0.68 : 0.78;
+    const targetX = isSmallScreen ? 0 : 15;
+    const targetY = isSmallScreen ? -2.5 : 0;
+    const targetScale = isSmallScreen ? 0.52 : 0.78;
 
     logo.position.set(targetX * easedProgress, targetY * easedProgress, 0);
     logo.scale.setScalar(1 + (targetScale - 1) * easedProgress);
@@ -360,7 +360,7 @@ export default function Scene() {
   }, []);
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh", background: "#000" }}>
+    <div className="scene-shell" style={{ position: "relative", background: "#000" }}>
       <Canvas
         dpr={isSmallScreen ? 1 : [1, 1.5]}
         gl={{ antialias: false, alpha: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" }}
@@ -370,8 +370,8 @@ export default function Scene() {
         <StudioLights enabled={studioLightsEnabled} showHelpers={showStudioLightHelpers} logoRef={logoRef} isSmallScreen={isSmallScreen} />
         <KBLogo logoRef={logoRef} onPositioned={() => setNavigationVisible(true)} />
         <CameraIntro onComplete={() => setCameraIntroFinished(true)} />
-        <CameraPositionReadout onUpdate={setCameraReadout} />
-        {showPerformanceStats && <Stats parent={statsContainerRef as unknown as RefObject<HTMLElement>} />}
+        {!isSmallScreen && <CameraPositionReadout onUpdate={setCameraReadout} />}
+        {showPerformanceStats && !isSmallScreen && <Stats parent={statsContainerRef as unknown as RefObject<HTMLElement>} />}
         {cameraIntroFinished && (
           <OrbitControls
             enableDamping
@@ -385,13 +385,14 @@ export default function Scene() {
 
       <Overlay navigationVisible={navigationVisible} />
 
-      {showPerformanceStats && (
+      {showPerformanceStats && !isSmallScreen && (
         <div
           ref={statsContainerRef}
           style={{ position: "absolute", left: 16, bottom: 80, zIndex: 20, pointerEvents: "auto" }}
         />
       )}
 
+      {!isSmallScreen && <>
       <div
         style={{
           position: "absolute",
@@ -468,6 +469,7 @@ export default function Scene() {
           Show performance stats
         </label>
       </div>
+      </>}
 
 
     </div>

@@ -61,11 +61,11 @@ export default function About() {
           max-width: 500px; /* Limits width so it doesn't stretch too wide */
           max-height: 85vh;
           overflow-y: auto;
-          background: rgba(0, 0, 0, 0.85);
+          background: linear-gradient(145deg, rgba(20, 19, 15, 0.96), rgba(8, 9, 11, 0.96));
           backdrop-filter: blur(20px);
           padding: 25px 20px;
           border-radius: 20px;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,198,48,0.22);
           color: white;
           text-align: center;
           scrollbar-width: none;
@@ -78,7 +78,7 @@ export default function About() {
           font-family: 'Bebas Neue', sans-serif;
           font-size: 2.2rem;
           margin: 0 0 15px 0;
-          color: #00aaff;
+          color: #ffc630;
           line-height: 1;
         }
 
@@ -105,8 +105,8 @@ export default function About() {
         }
 
         .skill-badge {
-          border: 1px solid #00aaff;
-          color: #00aaff;
+          border: 1px solid rgba(255,198,48,0.48);
+          color: #ffd96a;
           padding: 5px 10px;
           border-radius: 20px;
           font-family: 'Inter', sans-serif;

@@ -51,8 +51,9 @@ export default function Contact() {
               disabled={status === "sending" || status === "success"}
               className="contact-btn"
               style={{
-                background: status === 'success' ? '#4ade80' : '#00aaff',
+                background: status === 'success' ? '#20d6a0' : 'linear-gradient(110deg, #ffe37a 0%, #ffc229 55%, #ed9414 100%)',
                 cursor: status === 'sending' ? 'wait' : 'pointer',
+                color: status === 'success' ? '#052116' : '#16120a',
               }}
             >
               {status === "sending" ? "SENDING..." : status === "success" ? "MESSAGE SENT!" : "SEND MESSAGE"}
@@ -93,11 +94,11 @@ export default function Contact() {
 
         .contact-card {
           pointer-events: auto;
-          background: rgba(20, 20, 20, 0.9);
+          background: linear-gradient(145deg, rgba(20, 19, 15, 0.96), rgba(8, 9, 11, 0.96));
           backdrop-filter: blur(20px);
           padding: 30px 25px; /* Compact padding for mobile */
           border-radius: 4px;
-          border-left: 4px solid #00aaff;
+          border-left: 4px solid #ffc630;
           color: white;
           width: 100%;
           max-width: 400px; /* Limits width on larger screens */
@@ -129,7 +130,7 @@ export default function Contact() {
 
         .contact-input {
           background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,198,48,0.25);
           padding: 12px;
           color: white;
           font-family: 'Inter', sans-serif;
