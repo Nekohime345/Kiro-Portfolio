@@ -32,7 +32,7 @@ const reflectionPanels: ReflectionPanel[] = [
       intensity: 0.4,
       color: index % 3 === 0 ? "#ffd66b" : "#fff2c2",
       position: [Math.sin(angle) * 25, 0, Math.cos(angle) * 25],
-      scale: [8, 12, 1],
+      scale: [8, 100, 1],
     };
   }),
 ];
@@ -41,7 +41,7 @@ const reflectionPanels: ReflectionPanel[] = [
 const goldLogoMaterial = new THREE.MeshStandardMaterial({
   color: "#d4af37",
   metalness: 1,
-  roughness: 0,
+  roughness: 1,
 });
 
 function LightformerGuide({ panel, target, logoRef }: {
@@ -128,7 +128,7 @@ function LogoEnvironment({ enabled, showGuides, logoRef, isSmallScreen }: {
   return (
     <>
       {enabled && <Environment resolution={isSmallScreen ? 128 : 256} background={false}>
-        {(isSmallScreen ? reflectionPanels.slice(0, 9) : reflectionPanels).map((panel, index) => (
+        {reflectionPanels.filter((_, index) => !isSmallScreen || index % 12 === 0).map((panel, index) => (
           <Lightformer key={index} form="rect" target={target} {...panel} />
         ))}
       </Environment>}
