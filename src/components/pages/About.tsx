@@ -89,7 +89,7 @@ export default function About() {
         }
 
         .about-bio p {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           font-size: 0.9rem;
           line-height: 1.5;
           color: #ccc;
@@ -109,7 +109,7 @@ export default function About() {
           color: #ffd96a;
           padding: 5px 10px;
           border-radius: 20px;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           font-size: 0.75rem;
         }
 

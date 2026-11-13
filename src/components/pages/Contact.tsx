@@ -116,7 +116,7 @@ export default function Contact() {
         }
 
         .contact-subtitle {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           color: #888;
           margin-bottom: 20px;
           font-size: 0.9rem;
@@ -133,7 +133,7 @@ export default function Contact() {
           border: 1px solid rgba(255,198,48,0.25);
           padding: 12px;
           color: white;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           font-size: 0.9rem;
           outline: none;
           border-radius: 4px;
@@ -152,7 +152,7 @@ export default function Contact() {
           font-size: 0.9rem;
           font-weight: bold;
           margin-top: 5px;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           transition: background 0.3s;
           border-radius: 4px;
           text-transform: uppercase;

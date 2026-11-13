@@ -78,7 +78,7 @@ export default function Resume() {
           color: #fff;
           padding: 12px;
           text-align: center;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           font-size: 0.8rem;
           flex-shrink: 0;
           z-index: 2;

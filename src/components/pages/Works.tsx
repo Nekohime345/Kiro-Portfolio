@@ -100,7 +100,7 @@ export default function Works() {
         }
 
         .project-category {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           font-size: 0.7rem;
           background: rgba(255,198,48,0.12);
           padding: 4px 8px;
@@ -110,7 +110,7 @@ export default function Works() {
         }
 
         .project-desc {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Montserrat', sans-serif;
           color: #ccc;
           margin-top: 12px;
           line-height: 1.5;

@@ -340,6 +340,7 @@ export default function Scene() {
   const [showStudioLightHelpers, setShowStudioLightHelpers] = useState(false);
   const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
   const [navigationVisible, setNavigationVisible] = useState(false);
+  const [showEditorPanel, setShowEditorPanel] = useState(false);
   const [showPerformanceStats, setShowPerformanceStats] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 768);
   const [cameraReadout, setCameraReadout] = useState<CameraReadout>({
@@ -392,7 +393,7 @@ export default function Scene() {
         />
       )}
 
-      {!isSmallScreen && <>
+      {!isSmallScreen && (
       <div
         style={{
           position: "absolute",
@@ -416,16 +417,45 @@ export default function Scene() {
         </div>
       </div>
 
-      <div
+      )}
+
+      <button
+        type="button"
+        aria-expanded={showEditorPanel}
+        aria-controls="scene-editor-panel"
+        onClick={() => setShowEditorPanel((visible) => !visible)}
         style={{
           position: "absolute",
           top: 16,
           right: 16,
+          zIndex: 50,
+          padding: "8px 12px",
+          border: "1px solid rgba(255, 198, 48, 0.35)",
+          borderRadius: 8,
+          color: "#f8fafc",
+          background: "rgba(0, 0, 0, 0.82)",
+          font: "12px/1.2 monospace",
+          letterSpacing: "0.08em",
+          cursor: "pointer",
+        }}
+      >
+        {showEditorPanel ? "Close editor" : "Editor"}
+      </button>
+
+      {showEditorPanel && <div
+        id="scene-editor-panel"
+        style={{
+          position: "absolute",
+          top: 56,
+          right: 16,
           padding: "10px 12px",
           borderRadius: 8,
           color: "#f8fafc",
-          background: "rgba(0, 0, 0, 0.72)",
+          border: "1px solid rgba(255, 198, 48, 0.25)",
+          background: "rgba(0, 0, 0, 0.9)",
           font: "13px/1.6 monospace",
+          zIndex: 50,
+          width: "min(280px, calc(100vw - 32px))",
         }}
       >
         <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -460,16 +490,15 @@ export default function Scene() {
           />
           Show key / fill / backlight helpers
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+        {!isSmallScreen && <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
           <input
             type="checkbox"
             checked={showPerformanceStats}
             onChange={(event) => setShowPerformanceStats(event.target.checked)}
           />
           Show performance stats
-        </label>
-      </div>
-      </>}
+        </label>}
+      </div>}
 
 
     </div>

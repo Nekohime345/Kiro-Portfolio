@@ -9,6 +9,12 @@ import Resume from './pages/Resume';
 
 export default function Overlay({ navigationVisible }: { navigationVisible: boolean }) {
   const [section, setSection] = useState<string | null>(null);
+  const skills = [
+    'JAVASCRIPT', 'TYPESCRIPT', 'PYTHON', 'PHP', 'C#', 'JAVA',
+    'HTML', 'CSS', 'REACT', 'NEXT.JS', 'TAILWIND CSS', 'THREE.JS',
+    'FASTAPI', 'FIREBASE', 'REST API', 'FIRESTORE', 'PRISMA',
+    'GIT', 'GITHUB', 'FIGMA', 'VERCEL', 'ARDUINO',
+  ];
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
 
   useEffect(() => {
@@ -108,7 +114,7 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
             margin: 0, 
             color: '#ffffff',
             lineHeight: '0.85',
-            textShadow: '0 4px 20px rgba(0,0,0,0.5)', 
+            textShadow: '8px 8px 0 rgba(255, 198, 48, 0.75)',
             whiteSpace: 'nowrap',
             maxWidth: '100%'
           }}
@@ -128,7 +134,7 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
           animate={{ opacity: 1 }}
           transition={{ delay: 3.5, duration: 1 }}
           style={{ 
-            fontFamily: "'Inter', sans-serif", 
+            fontFamily: "'Montserrat', sans-serif", 
             margin: '10px 0 0 5px', 
             color: '#ffffff', 
             fontSize: isMobile ? '0.9rem' : '1.2rem', // Smaller text on mobile/tablet
@@ -148,7 +154,7 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
           animate={{ opacity: 1 }}
           transition={{ delay: 3.8, duration: 1 }}
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             maxWidth: isMobile ? '24rem' : '42rem',
             margin: isMobile ? '10px auto 0' : '12px 0 0 5px',
             color: 'rgba(255,255,255,0.82)',
@@ -186,7 +192,7 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
             }} />
           </div>
           <span style={{ 
-            fontFamily: "'Inter', sans-serif", 
+            fontFamily: "'Montserrat', sans-serif", 
             color: 'rgba(255,255,255,0.8)', 
             fontSize: '0.85rem', 
             fontWeight: '500',
@@ -209,12 +215,12 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
           onClick={(event) => event.stopPropagation()}
           style={{
             pointerEvents: navigationVisible ? 'auto' : 'none',
+            display: isMobile ? 'flex' : 'none',
             position: isMobile ? 'fixed' : 'static',
             left: isMobile ? 0 : 'auto',
             right: isMobile ? 0 : 'auto',
             bottom: isMobile ? '84px' : 'auto',
-            display: 'flex',
-            flexDirection: isMobile ? 'row' : 'column',
+            flexDirection: 'row',
             alignItems: isMobile ? 'center' : 'flex-start',
             justifyContent: isMobile ? 'center' : 'flex-start',
             flexWrap: isMobile ? 'wrap' : 'nowrap',
@@ -268,6 +274,31 @@ export default function Overlay({ navigationVisible }: { navigationVisible: bool
           gap: '12px',
           pointerEvents: 'none'
         }}>
+          {!isMobile && <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-start',
+            gap: '8px',
+            width: 'min(65vw, 920px)',
+            maxWidth: '100%',
+            pointerEvents: 'none'
+          }}>
+            {skills.map((skill) => (
+              <span key={skill} style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                color: 'rgba(255,255,255,0.82)',
+                border: '1px solid rgba(255,198,48,0.28)',
+                background: 'rgba(8,9,11,0.72)',
+                padding: '4px 9px',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                letterSpacing: '1px'
+              }}>
+                {skill}
+              </span>
+            ))}
+          </div>}
+
           {/* SOCIAL LINKS (at the former sound control position) */}
           <div style={{
             display: 'flex',
